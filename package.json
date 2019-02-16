@@ -1,0 +1,30 @@
+{
+  "name": "myhaileybot",
+  "version": "1.0.0",
+  "description": "Telebot with webhook",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "keywords": [
+    "telebot"
+  ],
+  "author": "Norman K K Kong",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^6.2.0",
+    "express": "^4.16.4",
+    "moment": "^2.24.0",
+    "telegraf": "^3.27.1"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/normankong/MyHaileyBot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/normankong/MyHaileyBot/issues"
+  },
+  "homepage": "https://github.com/normankong/MyHaileyBot#readme"
+}
