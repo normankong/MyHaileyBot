@@ -9,9 +9,9 @@ var haileyBot = require("./library/haileybot/index.js");
 
 if (process.env.ENVIRONMENT == "PRD") {
   // Attach Express to existing server
-  const BOT_PORT = process.env.BOT_PORT || 8080;
-  expressApp.listen(BOT_PORT, () => {
-    console.log(`Telebot listening on port ${process.env.BOT_PORT}`);
+  const PORT = process.env.PORT || 8080;
+  expressApp.listen(PORT, () => {
+    console.log(`Telebot listening on port ${process.env.PORT}`);
     console.log('Press Ctrl+C to quit.');
   });
 } else {
