@@ -1,6 +1,9 @@
 'use strict';
 
 const Telegraf = require('telegraf');
+var financialHelper = require('./financial_helper.js');
+var paymentHelper = require('./payment_helper.js');
+var visionHelper = require('./vision_helper.js');
 
 function createApplication(opts) {
   var opts = opts;
@@ -34,6 +37,8 @@ function createApplication(opts) {
         console.log("Webhook setup completed to " + webhookURL);
         console.log("Bot Status URL : https://api.telegram.org/bot" + token + "/getWebhookInfo");
       });
+    } else {
+      console.log("Skipo the webhook");
     }
 
     if (middleware) {
@@ -46,11 +51,16 @@ function createApplication(opts) {
     }
 
     // Add Event Handler
-    bot.on('sticker', (ctx) => ctx.reply('❤️'));
-    bot.on('message', (ctx) => ctx.reply('👍'));
+    bot.on('sticker', (ctx) => processSticker(ctx));
+    bot.on('message', (ctx) => processMessage(ctx));
     bot.command('start', ctx => {
-      return ctx.reply('Hey')
+      return ctx.reply('Hey ! Nice to meet you');
     })
+
+    // Initialize Helpers
+    financialHelper = financialHelper();
+    paymentHelper = paymentHelper();
+    visionHelper = visionHelper();
   };
 
   // Send Admin only message;
@@ -62,8 +72,26 @@ function createApplication(opts) {
   }
 
   // Initialize the App
-  app.init(opts);
+  app.init();
   return app;
 }
+
+function processSticker(ctx) {
+  console.log("Incoming Sticker");
+  ctx.reply('❤️');
+}
+
+
+function processMessage(ctx) {
+  console.log(`Incoming ${ctx.message}`);
+
+  let isHandled = false;
+  isHandled = isHandled || financialHelper.handleRequest(ctx);
+  isHandled = isHandled || paymentHelper.handleRequest(ctx);
+  isHandled = isHandled || visionHelper.handleRequest(ctx);
+
+  if (!isHandled)  ctx.reply('❤️👍');
+}
+
 
 exports = module.exports = createApplication;
