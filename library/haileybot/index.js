@@ -30,15 +30,18 @@ function createApplication(opts) {
 
     // Set the Telegram server to initialize the webhook
     if (webhookRefresh) {
-      console.log("Update Telegram webhook")
-      bot.telegram.setWebhook(webhookURL, {
+      let options = {
         source: webhookCRT
-      }).then(ctx => {
+      }
+      options = (webhookCRT == "") ? null : options;
+
+      console.log("Update Telegram webhook")
+      bot.telegram.setWebhook(webhookURL, options).then(ctx => {
         console.log("Webhook setup completed to " + webhookURL);
         console.log("Bot Status URL : https://api.telegram.org/bot" + token + "/getWebhookInfo");
       });
     } else {
-      console.log("Skipo the webhook");
+      console.log("Skip the webhook");
     }
 
     if (middleware) {
@@ -90,7 +93,7 @@ function processMessage(ctx) {
   isHandled = isHandled || paymentHelper.handleRequest(ctx);
   isHandled = isHandled || visionHelper.handleRequest(ctx);
 
-  if (!isHandled)  ctx.reply('❤️👍');
+  if (!isHandled) ctx.reply('❤️👍');
 }
 
 
