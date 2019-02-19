@@ -1,8 +1,10 @@
 'use strict';
 
-const https = require("https");
+let axios = require("axios");
+const DEFAULT_ACTION = "EXTRACT"
 
-function createApplication(opts) {
+function createApplication(bot, opts) {
+    var bot = bot;
     var opts = opts;
     var app = {};
 
@@ -10,7 +12,11 @@ function createApplication(opts) {
         return opts;
     }
 
-    app.init = function () {}
+    app.init = function () {
+        bot.action('TRANSLATE', (ctx) => app.setAction(ctx));
+        bot.action('EXTRACT', (ctx) => app.setAction(ctx));
+        bot.action('PREDICT', (ctx) => app.setAction(ctx));
+    }
 
     app.handleRequest = function (ctx) {
         // Proceed Vision API
@@ -23,53 +29,71 @@ function createApplication(opts) {
 
     app.proceedVision = function (ctx) {
         ctx.reply("One moment please....")
-        var fileID;
-        for (var i = 0; i < ctx.message.photo.length; i++) {
-            var photo = ctx.message.photo[i];
-            var width = photo.width;
-            var height = photo.height;
-            fileID = photo.file_id;
-            if (width >= 400) {
-                break;
-            }
-        }
 
+        // Use the biggest files
+        var fileID = ctx.message.photo[ctx.message.photo.length - 1].file_id;
         if (fileID != null) {
             var handler = ctx.telegram.getFile(fileID);
             handler.then(function (v) {
                 var url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${v.file_path}`;
-                app.proceedDownloadAndPredict(ctx, url)
+
+                app.proceedAPITrigger(ctx, url);
+
             });
         } else {
             ctx.reply("File is somehow error");
         }
     }
     /**
-     * Download user upload file then submit to Google Vision
-     * @param {URL for the image} url 
+     * Trigger API to return Text
      * @param {Telegram Context} ctx 
+     * @param {URL for the image} url 
      */
-    app.proceedDownloadAndPredict = function(ctx, url) {
-        var buffer = Buffer.alloc(0);
-        console.log(`Download from ${url}`);
-        // var file = fs.createWriteStream(dest);
-        var request = https.get(url, function (response) {
-            response.on('end', () => {
-                console.log(`Download completed ${buffer.length}`);
-                // vision.predict(buffer, function (result) {
-                //     ctx.reply(result);
-                // });
-                ctx.reply("Got your vision request, will be implement later");
+    app.proceedAPITrigger = function (ctx, url) {
+
+        console.log(url + " : " + app.getAction(ctx));
+        var header = {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        var data = {
+            url: url,
+            action: app.getAction(ctx)
+        };
+
+        // Perform Post
+        axios({
+                method: "POST",
+                url: process.env.GOOGLE_VISION_TEXT_API,
+                headers: header,
+                data: data
+            })
+            .then(function (response) {
+
+                console.log(`Response : ${response.data.code} : ${response.data.message}`);
+                if (response.data.code == "000") {
+                    ctx.reply(response.data.message)
+                } else {
+                    ctx.reply("Image do not contain any text");
+                }
+            })
+            .catch(function (error) {
+                ctx.reply("Unknown errors");
+                console.log(error);
             });
-            response.on('data', (d) => {
-                // console.log(d, d.length)
-                buffer = Buffer.concat([buffer, Buffer.from(d, "binary")]);
-            });
-        }).on('error', function (err) { // Handle errors
-            console.log(err)
-        });
     };
 
+    app.getAction = function getAction(ctx) {
+        if (ctx.session.imageAction == null) ctx.session.imageAction = DEFAULT_ACTION;
+        return ctx.session.imageAction;
+    }
+
+    app.setAction = function setAction(ctx) {
+        console.log(`Action : ${ctx.match}`);
+        ctx.session.imageAction = ctx.match;
+        ctx.reply("Update Default Image action " + ctx.match);
+    }
 
     // Initialize the App
     app.init();

@@ -4,6 +4,9 @@ const Telegraf = require('telegraf');
 var financialHelper = require('./financial_helper.js');
 var paymentHelper = require('./payment_helper.js');
 var visionHelper = require('./vision_helper.js');
+const Extra = require('telegraf/extra');
+const Markup = require('telegraf/markup');
+const session = require('telegraf/session');
 
 function createApplication(opts) {
   var opts = opts;
@@ -27,6 +30,8 @@ function createApplication(opts) {
 
     // Initialize Bot Instance
     bot = new Telegraf(token);
+    // Add Event Handler
+    bot.use(session());
 
     // Set the Telegram server to initialize the webhook
     if (webhookRefresh) {
@@ -53,17 +58,18 @@ function createApplication(opts) {
       bot.telegram.sendMessage(adminUser, "👍 Hello World");
     }
 
-    // Add Event Handler
+    // Initialize Helpers
+    financialHelper = financialHelper(bot, opts);
+    paymentHelper = paymentHelper(bot, opts);
+    visionHelper = visionHelper(bot, opts);
+
+    // Event Handler
     bot.on('sticker', (ctx) => processSticker(ctx));
     bot.on('message', (ctx) => processMessage(ctx));
+
     bot.command('start', ctx => {
       return ctx.reply('Hey ! Nice to meet you');
     })
-
-    // Initialize Helpers
-    financialHelper = financialHelper();
-    paymentHelper = paymentHelper();
-    visionHelper = visionHelper();
   };
 
   // Send Admin only message;
@@ -86,9 +92,11 @@ function processSticker(ctx) {
 
 
 function processMessage(ctx) {
-  console.log(`Incoming ${ctx.message}`);
+  console.debug(`Incoming ${ctx.message.text}`);
 
   let isHandled = false;
+  isHandled = isHandled || showHelp(ctx);
+
   isHandled = isHandled || financialHelper.handleRequest(ctx);
   isHandled = isHandled || paymentHelper.handleRequest(ctx);
   isHandled = isHandled || visionHelper.handleRequest(ctx);
@@ -96,5 +104,26 @@ function processMessage(ctx) {
   if (!isHandled) ctx.reply('❤️👍');
 }
 
+function showHelp(ctx) {
+
+  if (ctx.message.text != "?") return false;
+
+  // @TODO further extend to sub menu
+  var message = "Image Action : "
+  const keyboard = Markup.inlineKeyboard([
+    Markup.callbackButton('Translate ?', 'TRANSLATE'),
+    Markup.callbackButton('Extract ?', 'EXTRACT'),
+    Markup.callbackButton('Predict ?', 'PREDICT'),
+  ])
+  ctx.reply(message, Extra.HTML().markup(keyboard));
+
+  // ctx.reply('One time keyboard', Markup
+  //   .keyboard(['/simple', '/inline', '/pyramid'])
+  //   .oneTime()
+  //   .resize()
+  //   .extra()
+  // )
+  return true;
+}
 
 exports = module.exports = createApplication;

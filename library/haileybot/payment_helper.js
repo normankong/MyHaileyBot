@@ -3,7 +3,8 @@
 const request = require('request');
 const leftPad = require("left-pad");
 
-function createApplication(opts) {
+function createApplication(bot, opts) {
+    var bot = bot
     var opts = opts;
     var app = {};
 
