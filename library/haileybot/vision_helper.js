@@ -13,7 +13,6 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        bot.action('TRANSLATE', (ctx) => app.setAction(ctx));
         bot.action('EXTRACT', (ctx) => app.setAction(ctx));
         bot.action('PREDICT', (ctx) => app.setAction(ctx));
     }
@@ -73,7 +72,16 @@ function createApplication(bot, opts) {
 
                 console.log(`Response : ${response.data.code} : ${response.data.message}`);
                 if (response.data.code == "000") {
-                    ctx.reply(response.data.message)
+                    let text = response.data.message;
+                    ctx.reply(text);
+
+                    // Additional Translation Call if necesary 
+                    if (app.getAction(ctx) == "TRANSLATE") {
+                        setTimeout(() => {
+                            ctx.reply("Translating");
+                            app.proceedTranslate(ctx, text);
+                        }, 1000);
+                    }
                 } else {
                     ctx.reply("Image do not contain any text");
                 }
@@ -84,16 +92,55 @@ function createApplication(bot, opts) {
             });
     };
 
-    app.getAction = function getAction(ctx) {
-        if (ctx.session.imageAction == null) ctx.session.imageAction = DEFAULT_ACTION;
-        return ctx.session.imageAction;
+    app.getAction = function (ctx) {
+        if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
+        return ctx.session.action;
     }
 
-    app.setAction = function setAction(ctx) {
+    app.setAction = function (ctx) {
         console.log(`Action : ${ctx.match}`);
-        ctx.session.imageAction = ctx.match;
-        ctx.reply("Update Default Image action " + ctx.match);
+        ctx.session.action = ctx.match;
+        ctx.reply("Update Session Action " + ctx.match);
     }
+
+    /**
+     * Trigger API to translate Text
+     * @param {Telegram Context} ctx 
+     * @param {Text} text
+     */
+    app.proceedTranslate = function (ctx, text) {
+
+        var header = {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        var data = {
+            text: text
+        };
+
+        // Perform Post
+        axios({
+                method: "POST",
+                url: process.env.GOOGLE_TRANSLATE_API,
+                headers: header,
+                data: data
+            })
+            .then(function (response) {
+
+                console.log(`Response : ${response.data.code} : ${response.data.message}`);
+                if (response.data.code == "000") {
+                    ctx.reply(response.data.message)
+                } else {
+                    ctx.reply("Unable to Translate");
+                }
+            })
+            .catch(function (error) {
+                ctx.reply("Unknown errors");
+                console.log(error);
+            });
+    };
+
 
     // Initialize the App
     app.init();

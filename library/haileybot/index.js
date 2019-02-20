@@ -4,6 +4,7 @@ const Telegraf = require('telegraf');
 var financialHelper = require('./financial_helper.js');
 var paymentHelper = require('./payment_helper.js');
 var visionHelper = require('./vision_helper.js');
+var translateHelper = require('./translate_helper.js');
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 const session = require('telegraf/session');
@@ -62,10 +63,12 @@ function createApplication(opts) {
     financialHelper = financialHelper(bot, opts);
     paymentHelper = paymentHelper(bot, opts);
     visionHelper = visionHelper(bot, opts);
+    translateHelper = translateHelper(bot, opts);
 
     // Event Handler
     bot.on('sticker', (ctx) => processSticker(ctx));
     bot.on('message', (ctx) => processMessage(ctx));
+    bot.action('CLEAR', (ctx) => app.clearAction(ctx));
 
     bot.command('start', ctx => {
       return ctx.reply('Hey ! Nice to meet you');
@@ -80,6 +83,12 @@ function createApplication(opts) {
     }
   }
 
+  app.clearAction = function (ctx) {
+    console.log(`Clear all action`);
+    ctx.session.action = null
+    ctx.reply("Clear all action");
+  }
+
   // Initialize the App
   app.init();
   return app;
@@ -92,7 +101,7 @@ function processSticker(ctx) {
 
 
 function processMessage(ctx) {
-  console.debug(`Incoming ${ctx.message.text}`);
+  console.debug(`Incoming request`);
 
   let isHandled = false;
   isHandled = isHandled || showHelp(ctx);
@@ -100,6 +109,7 @@ function processMessage(ctx) {
   isHandled = isHandled || financialHelper.handleRequest(ctx);
   isHandled = isHandled || paymentHelper.handleRequest(ctx);
   isHandled = isHandled || visionHelper.handleRequest(ctx);
+  isHandled = isHandled || translateHelper.handleRequest(ctx);
 
   if (!isHandled) ctx.reply('❤️👍');
 }
@@ -109,11 +119,12 @@ function showHelp(ctx) {
   if (ctx.message.text != "?") return false;
 
   // @TODO further extend to sub menu
-  var message = "Image Action : "
+  var message = "Please Select Action"
   const keyboard = Markup.inlineKeyboard([
     Markup.callbackButton('Translate ?', 'TRANSLATE'),
     Markup.callbackButton('Extract ?', 'EXTRACT'),
     Markup.callbackButton('Predict ?', 'PREDICT'),
+    Markup.callbackButton('Clear ?', 'CLEAR'),
   ])
   ctx.reply(message, Extra.HTML().markup(keyboard));
 
