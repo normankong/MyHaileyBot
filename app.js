@@ -50,29 +50,31 @@ var botOpts = {
   middleware: expressApp
 }
 
+// Initiailize Hailey Bot
 var haileyBot = haileyBot(botOpts);
 
-// Start the Express Server
+// Register Show Status End point
 expressApp.get('/showStatus', (req, res) => {
-  res.send('Show Status');
-  haileyBot.sendAdmin("How do you do ?");
   console.log("Sending Show Status")
+
+  haileyBot.sendAdmin("How do you do ?");
+
+  res.send('Show Status');
 })
 
-// Start the Express Server
+// Register the Notify End point
 expressApp.get('/notifyBot', (req, res) => {
 
-  var data = req.body.data;
+  console.log("Notify Bot");
 
-  for (var i = 0; i < data.length; i++) {
-    var object = data[i];
+  for (var i = 0; i < req.body.data.length; i++) {
+    var object = req.body.data[i];
     var bank = object.bank;
     var payer = object.payer;
     var creditAmount = object.creditAmount;
     var creditAccount = object.creditAccount;
     haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
   }
-  console.log("Notify Bot")
 
   res.end(JSON.stringify({
     code: "000"
