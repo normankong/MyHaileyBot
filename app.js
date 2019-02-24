@@ -10,7 +10,7 @@ var haileyBot = require("./library/haileybot/index.js");
 
 // parse various different custom JSON types as JSON
 expressApp.use(bodyParser.json({
-  type: 'application/json'
+  type: 'application/notify-json'
 }))
 
 if (process.env.ENVIRONMENT == "PRD") {
