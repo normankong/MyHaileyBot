@@ -8,7 +8,7 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var haileyBot = require("./library/haileybot/index.js");
 
-// parse various different custom JSON types as JSON
+// Special handling to parse notify-json as it corrupt with Bot
 expressApp.use(bodyParser.json({
   type: 'application/notify-json'
 }))
@@ -63,7 +63,7 @@ expressApp.get('/showStatus', (req, res) => {
 })
 
 // Register the Notify End point
-expressApp.get('/notifyBot', (req, res) => {
+expressApp.post('/notifyBot', (req, res) => {
 
   console.log("Notify Bot");
 
