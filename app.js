@@ -5,7 +5,13 @@ const express = require('express');
 const expressApp = express();
 const moment = require('moment');
 var fs = require('fs');
+var bodyParser = require('body-parser');
 var haileyBot = require("./library/haileybot/index.js");
+
+// parse various different custom JSON types as JSON
+expressApp.use(bodyParser.json({
+  type: 'application/json'
+}))
 
 if (process.env.ENVIRONMENT == "PRD") {
   // Attach Express to existing server
@@ -51,4 +57,24 @@ expressApp.get('/showStatus', (req, res) => {
   res.send('Show Status');
   haileyBot.sendAdmin("How do you do ?");
   console.log("Sending Show Status")
+})
+
+// Start the Express Server
+expressApp.get('/notifyBot', (req, res) => {
+
+  var data = req.body.data;
+
+  for (var i = 0; i < data.length; i++) {
+    var object = data[i];
+    var bank = object.bank;
+    var payer = object.payer;
+    var creditAmount = object.creditAmount;
+    var creditAccount = object.creditAccount;
+    haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
+  }
+  console.log("Notify Bot")
+
+  res.end(JSON.stringify({
+    code: "000"
+  }))
 })
