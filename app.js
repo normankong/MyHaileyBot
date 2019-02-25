@@ -69,23 +69,18 @@ expressApp.post('/notifyBot', (req, res) => {
   req.on('end', () => {
 
     console.log("Body " + body);
-
-    haileyBot.sendAdmin('Incoming message : ' + body);
-
-    console.log("End Notify bot")
+    // haileyBot.sendAdmin('Incoming message : ' + body);
 
     var json = JSON.parse(body);
-    for (var i = 0; i < json.data.length; i++) {
-      var object = json.data[i];
-      var bank = object.bank;
-      var payer = object.payer;
-      var creditAmount = object.creditAmount;
-      var creditAccount = object.creditAccount;
-      haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
-    }
-
-    if (json.data.length == 0) {
-      haileyBot.sendAdmin('Incoming message but no parsable content');
+    if (json.code == "000") {
+      for (var i = 0; i < json.data.length; i++) {
+        var object = json.data[i];
+        var bank = object.bank;
+        var payer = object.payer;
+        var creditAmount = object.creditAmount;
+        var creditAccount = object.creditAccount;
+        haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
+      }
     }
 
     res.end(JSON.stringify({
