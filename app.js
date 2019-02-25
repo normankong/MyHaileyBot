@@ -68,6 +68,10 @@ expressApp.post('/notifyBot', (req, res) => {
   });
   req.on('end', () => {
 
+    console.log("Body " + body);
+
+    haileyBot.sendAdmin('Incoming message : ' + body);
+
     console.log("End Notify bot")
 
     var json = JSON.parse(body);
