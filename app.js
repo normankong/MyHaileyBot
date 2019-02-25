@@ -1,17 +1,12 @@
 require('dotenv').config();
 
+const util = require('util')
+
 var https = require('https');
 const express = require('express');
 const expressApp = express();
-const moment = require('moment');
 var fs = require('fs');
-var bodyParser = require('body-parser');
 var haileyBot = require("./library/haileybot/index.js");
-
-// Special handling to parse notify-json as it corrupt with Bot
-expressApp.use(bodyParser.json({
-  type: 'application/notify-json'
-}))
 
 if (process.env.ENVIRONMENT == "PRD") {
   // Attach Express to existing server
@@ -62,21 +57,36 @@ expressApp.get('/showStatus', (req, res) => {
   res.send('Show Status');
 })
 
-// Register the Notify End point
+// Register the Notify End point. Please note the Body Parser was not work as telegraf crash with it
 expressApp.post('/notifyBot', (req, res) => {
 
   console.log("Notify Bot");
 
-  for (var i = 0; i < req.body.data.length; i++) {
-    var object = req.body.data[i];
-    var bank = object.bank;
-    var payer = object.payer;
-    var creditAmount = object.creditAmount;
-    var creditAccount = object.creditAccount;
-    haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
-  }
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString(); // convert Buffer to string
+  });
+  req.on('end', () => {
 
-  res.end(JSON.stringify({
-    code: "000"
-  }))
+    console.log("End Notify bot")
+
+    var json = JSON.parse(body);
+    for (var i = 0; i < json.data.length; i++) {
+      var object = json.data[i];
+      var bank = object.bank;
+      var payer = object.payer;
+      var creditAmount = object.creditAmount;
+      var creditAccount = object.creditAccount;
+      haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
+    }
+
+    if (json.data.length == 0) {
+      haileyBot.sendAdmin('Incoming message but no parsable content');
+    }
+
+    res.end(JSON.stringify({
+      code: "000"
+    }))
+  });
+
 })
