@@ -69,17 +69,31 @@ expressApp.post('/notifyBot', (req, res) => {
   req.on('end', () => {
 
     console.log("Body " + body);
-    // haileyBot.sendAdmin('Incoming message : ' + body);
 
-    var json = JSON.parse(body);
+    let json = JSON.parse(body);
     if (json.code == "000") {
-      for (var i = 0; i < json.data.length; i++) {
-        var object = json.data[i];
-        var bank = object.bank;
-        var payer = object.payer;
-        var creditAmount = object.creditAmount;
-        var creditAccount = object.creditAccount;
-        haileyBot.sendAdmin(`Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`);
+      for (let i = 0; i < json.data.length; i++) {
+        let object = json.data[i];
+
+        let message = "";
+        if (object.type == "ICT")
+        {
+          let bank = object.bank;
+          let payer = object.payer;
+          let creditAmount = object.creditAmount;
+          let creditAccount = object.creditAccount;
+          message = `Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`;
+        }
+
+        if (object.type == "STM")
+        {
+          let bank = object.bank;
+          let acct = object.acct;
+          message = `親 : 你有電子月結單，快來看看 : ${bank} ${acct}`;
+        }
+        
+        
+        haileyBot.sendAdmin(message);
       }
     }
 
