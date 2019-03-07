@@ -85,13 +85,21 @@ expressApp.post('/notifyBot', (req, res) => {
           message = `Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`;
         }
 
+        if (object.type == "OCT")
+        {
+          let bank = object.bank;
+          let payee = object.payee;
+          let debitAmount = object.debitAmount;
+          let debitAccount = object.debitAccount;
+          message = `Payment : You paid ${payee} with ${debitAccount} from ${bank} - ${debitAmount}`;
+        }
+
         if (object.type == "STM")
         {
           let bank = object.bank;
           let acct = object.acct;
           message = `親 : 你有電子月結單，快來看看 : ${bank} ${acct}`;
         }
-        
         
         haileyBot.sendAdmin(message);
       }
