@@ -82,7 +82,7 @@ expressApp.post('/notifyBot', (req, res) => {
           let payer = object.payer;
           let creditAmount = object.creditAmount;
           let creditAccount = object.creditAccount;
-          message = `Payment : ${payer} paid you ${creditAmount} to ${bank} - ${creditAccount}`;
+          message = `親 : ${payer} 使用轉數快過 ${creditAmount} 錢給你的 ${bank} 金額，入賬戶口為 ${creditAccount}`;
         }
 
         if (object.type == "OCT")
@@ -91,7 +91,7 @@ expressApp.post('/notifyBot', (req, res) => {
           let payee = object.payee;
           let debitAmount = object.debitAmount;
           let debitAccount = object.debitAccount;
-          message = `Payment : You paid ${payee} with ${debitAccount} from ${bank} - ${debitAmount}`;
+          message = `親 : 你剛使用轉數快過 ${debitAmount} 給 ${payee}, 由 ${bank} 戶口 ${debitAccount} 扣除` ;
         }
 
         if (object.type == "STM")
