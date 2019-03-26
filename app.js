@@ -82,7 +82,7 @@ expressApp.post('/notifyBot', (req, res) => {
           let payer = object.payer;
           let creditAmount = object.creditAmount;
           let creditAccount = object.creditAccount;
-          message = `親 : ${payer} 使用轉數快過 ${creditAmount} 錢給你的 ${bank} 金額，入賬戶口為 ${creditAccount}`;
+          message = `親 : ${payer} 使用轉數快過 ${creditAmount} 給你的 ${bank}，入賬戶口為 ${creditAccount}`;
         }
 
         if (object.type == "OCT")
