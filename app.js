@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const util = require('util')
+const axios = require('axios');
 
 var https = require('https');
 const express = require('express');
@@ -71,43 +72,64 @@ expressApp.post('/notifyBot', (req, res) => {
     console.log("Body " + body);
 
     let json = JSON.parse(body);
+
     if (json.code == "000") {
-      for (let i = 0; i < json.data.length; i++) {
-        let object = json.data[i];
-
-        let message = "";
-        if (object.type == "ICT")
-        {
-          let bank = object.bank;
-          let payer = object.payer;
-          let creditAmount = object.creditAmount;
-          let creditAccount = object.creditAccount;
-          message = `親 : ${payer} 使用轉數快過 ${creditAmount} 給你的 ${bank}，入賬戶口為 ${creditAccount}`;
-        }
-
-        if (object.type == "OCT")
-        {
-          let bank = object.bank;
-          let payee = object.payee;
-          let debitAmount = object.debitAmount;
-          let debitAccount = object.debitAccount;
-          message = `親 : 你剛使用轉數快過 ${debitAmount} 給 ${payee}, 由 ${bank} 戶口 ${debitAccount} 扣除` ;
-        }
-
-        if (object.type == "STM")
-        {
-          let bank = object.bank;
-          let acct = object.acct;
-          message = `親 : 你有電子月結單，快來看看 : ${bank} ${acct}`;
-        }
-        
-        haileyBot.sendAdmin(message);
-      }
+      notifyBotWithMessage(json);
     }
 
+    if (json.code == "001") {
+      notifyBotWithImage(json);
+    }
     res.end(JSON.stringify({
       code: "000"
     }))
   });
 
 })
+
+function notifyBotWithMessage(json) {
+  for (let i = 0; i < json.data.length; i++) {
+    let object = json.data[i];
+
+    let message = "";
+    if (object.type == "ICT") {
+      let bank = object.bank;
+      let payer = object.payer;
+      let creditAmount = object.creditAmount;
+      let creditAccount = object.creditAccount;
+      message = `親 : ${payer} 使用轉數快過 ${creditAmount} 給你的 ${bank}，入賬戶口為 ${creditAccount}`;
+    }
+
+    if (object.type == "OCT") {
+      let bank = object.bank;
+      let payee = object.payee;
+      let debitAmount = object.debitAmount;
+      let debitAccount = object.debitAccount;
+      message = `親 : 你剛使用轉數快過 ${debitAmount} 給 ${payee}, 由 ${bank} 戶口 ${debitAccount} 扣除`;
+    }
+
+    if (object.type == "STM") {
+      let bank = object.bank;
+      let acct = object.acct;
+      message = `親 : 你有電子月結單，快來看看 : ${bank} ${acct}`;
+    }
+
+    haileyBot.sendAdmin(message);
+  }
+}
+
+function notifyBotWithImage(json) {
+  let source = json.source;
+  console.log(`Download image from ${source}`);
+  axios.get(source, {
+      responseType: 'arraybuffer'
+    })
+    .then(response => {
+      let buffer = new Buffer(response.data, 'binary')
+      haileyBot.sendImage(buffer);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+
+}

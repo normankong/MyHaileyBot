@@ -83,6 +83,14 @@ function createApplication(opts) {
     }
   }
 
+  // Send Admin image;
+  app.sendImage = function (buffer) {
+    if (opts.adminUser) {
+      console.log(`Sending image to ${opts.adminUser}`);
+      bot.telegram.sendPhoto(opts.adminUser, {source: buffer});
+    }
+  }  
+
   app.clearAction = function (ctx) {
     console.log(`Clear all action`);
     ctx.session.action = null
