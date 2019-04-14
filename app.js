@@ -88,6 +88,11 @@ expressApp.post('/notifyBot', (req, res) => {
 })
 
 function notifyBotWithMessage(json) {
+
+  if (json.message != null) {
+    haileyBot.sendAdmin(json.message);
+  }
+
   for (let i = 0; i < json.data.length; i++) {
     let object = json.data[i];
 
@@ -131,5 +136,4 @@ function notifyBotWithImage(json) {
     .catch(error => {
       console.log(error);
     });
-
 }
