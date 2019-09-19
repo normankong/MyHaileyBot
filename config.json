@@ -1,0 +1,41 @@
+{
+    "data": [
+        {
+            "desc": "華都花園",
+            "busRoute": "67X",
+            "bsiCode": "CA07-S-2900-0",
+            "busBound" : "1"
+        },
+        {
+            "desc": "華都花園",
+            "busRoute": "67M",
+            "bsiCode": "CA07-S-2900-0",
+            "busBound" : "1"
+        },
+        {
+            "desc": "華都花園",
+            "busRoute": "267X",
+            "bsiCode": "CA07-S-2900-0",
+            "busBound" : "1"
+        },
+        {
+            "desc": "屯門公路轉車站",
+            "busRoute": "259D",
+            "bsiCode": "TU17-S-1400-0",
+            "busBound" : "1"
+        },
+        {
+            "desc": "啟泰苑",
+            "busRoute": "62X",
+            "bsiCode": "KW16-W-2465-0",
+            "busBound" : "2"
+        },
+        {
+            "desc": "置樂花園",
+            "busRoute": "61M",
+            "bsiCode": "CA07-N-4150-0",
+            "busBound" : "2"
+        }
+
+    ]
+}

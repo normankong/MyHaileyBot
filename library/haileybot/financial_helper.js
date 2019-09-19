@@ -17,7 +17,8 @@ function createApplication(bot, opts) {
     app.handleRequest = function (ctx) {
         // Proceed Stock Quote
         var stockRegEx = new RegExp("(\\d*).hk", "i");
-        if (!stockRegEx.test(ctx.message.text)) return false; {
+        if (!stockRegEx.test(ctx.message.text)) return false; 
+        {
             var msg = stockRegEx.exec(ctx.message.text);
             var stockQuote = msg[1];
 
@@ -29,7 +30,7 @@ function createApplication(bot, opts) {
 
     /**
      * Proceed Stock Quote
-     * @param {Telegram Context} ctx 
+     * @param {STOCK_API_URLTelegram Context} ctx 
      * @param {Stock Tick} stockQuote 
      */
     app.proceedStockQuote = function (ctx, stockQuote) {
@@ -37,6 +38,7 @@ function createApplication(bot, opts) {
         console.log(`Processing url : ${url}`);
         request.get(url,
             function (error, response, body) {
+                //console.log(body)
                 let price = JSON.parse(body).dataset.data[0][1];
                 let symbol = JSON.parse(body).dataset.name;
                 return ctx.reply(`${ symbol } : $${ price }`);

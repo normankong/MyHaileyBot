@@ -13,3 +13,5 @@ Type '?' to see the available menu
 - Clear     : Clear all action
 
 Type xxxxx.hk to return the HK Stock code
+
+Type 1 to enter Bus Mode

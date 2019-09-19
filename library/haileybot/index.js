@@ -1,10 +1,12 @@
 'use strict';
+require('dotenv').config();
 
 const Telegraf = require('telegraf');
 var financialHelper = require('./financial_helper.js');
 var paymentHelper = require('./payment_helper.js');
 var visionHelper = require('./vision_helper.js');
 var translateHelper = require('./translate_helper.js');
+var busHelper = require('./bus_helper.js');
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 const session = require('telegraf/session');
@@ -64,6 +66,7 @@ function createApplication(opts) {
     paymentHelper = paymentHelper(bot, opts);
     visionHelper = visionHelper(bot, opts);
     translateHelper = translateHelper(bot, opts);
+    busHelper = busHelper(bot, opts);
 
     // Event Handler
     bot.on('sticker', (ctx) => processSticker(ctx));
@@ -87,9 +90,11 @@ function createApplication(opts) {
   app.sendImage = function (buffer) {
     if (opts.adminUser) {
       console.log(`Sending image to ${opts.adminUser}`);
-      bot.telegram.sendPhoto(opts.adminUser, {source: buffer});
+      bot.telegram.sendPhoto(opts.adminUser, {
+        source: buffer
+      });
     }
-  }  
+  }
 
   app.clearAction = function (ctx) {
     console.log(`Clear all action`);
@@ -112,37 +117,36 @@ function processMessage(ctx) {
   console.debug(`Incoming request`);
 
   let isHandled = false;
-  isHandled = isHandled || showHelp(ctx);
+  isHandled = isHandled || showHint(ctx);
 
   isHandled = isHandled || financialHelper.handleRequest(ctx);
   isHandled = isHandled || paymentHelper.handleRequest(ctx);
   isHandled = isHandled || visionHelper.handleRequest(ctx);
   isHandled = isHandled || translateHelper.handleRequest(ctx);
+  isHandled = isHandled || busHelper.handleRequest(ctx);
 
   if (!isHandled) ctx.reply('❤️👍');
 }
 
-function showHelp(ctx) {
+function showHint(ctx) {
 
-  if (ctx.message.text != "?") return false;
+  if (ctx.message.text == "?") {
+    var message = "Please Select Action"
+    const keyboard = Markup.inlineKeyboard([
+      Markup.callbackButton('Translate ?', 'TRANSLATE'),
+      Markup.callbackButton('Extract ?', 'EXTRACT'),
+      Markup.callbackButton('Predict ?', 'PREDICT'),
+      Markup.callbackButton('Clear ?', 'CLEAR'),
+    ])
+    ctx.reply(message, Extra.HTML().markup(keyboard));
+    return true;
+  }
 
-  // @TODO further extend to sub menu
-  var message = "Please Select Action"
-  const keyboard = Markup.inlineKeyboard([
-    Markup.callbackButton('Translate ?', 'TRANSLATE'),
-    Markup.callbackButton('Extract ?', 'EXTRACT'),
-    Markup.callbackButton('Predict ?', 'PREDICT'),
-    Markup.callbackButton('Clear ?', 'CLEAR'),
-  ])
-  ctx.reply(message, Extra.HTML().markup(keyboard));
+  if (ctx.message.text == "1") {
+    return busHelper.showMenu(ctx);
+  }
 
-  // ctx.reply('One time keyboard', Markup
-  //   .keyboard(['/simple', '/inline', '/pyramid'])
-  //   .oneTime()
-  //   .resize()
-  //   .extra()
-  // )
-  return true;
+  return false;
 }
 
 exports = module.exports = createApplication;
