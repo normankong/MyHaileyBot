@@ -6,6 +6,7 @@ const leftPad = require("left-pad");
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 let axios = require("axios");
+var moment = require('moment');
 
 function createApplication(bot, opts) {
     var bot = bot;
@@ -83,7 +84,8 @@ function createApplication(bot, opts) {
                         rows.push('😱😱😱暫時未能提供....')
                     }
 
-                    let replyMsg = `車站 : ${cName} \n`;
+                    let replyMsg = `現在時間 ${moment().format("HH:mm")}\n`;
+                    replyMsg += `車站 : ${cName} \n`;
                     replyMsg += `起點 : ${oriCName}\n`;
                     replyMsg += `終站 : ${destCName}\n`;
                     replyMsg += `車費 : ${AirFare} \n`;
@@ -132,7 +134,7 @@ function createApplication(bot, opts) {
             //keyboardList.push(Markup.callbackButton(desc, routeID));
             rowList.push(desc);
             
-            if (rowList.length == 2) {
+            if (rowList.length == 3) {
                 keyboardList.push(rowList.slice(0));
                 rowList = [];
             }
