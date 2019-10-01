@@ -7,6 +7,7 @@ const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 let axios = require("axios");
 var moment = require('moment');
+require("moment-timezone");
 
 function createApplication(bot, opts) {
     var bot = bot;
@@ -84,7 +85,7 @@ function createApplication(bot, opts) {
                         rows.push('😱😱😱暫時未能提供....')
                     }
 
-                    let replyMsg = `現在時間 ${moment().format("HH:mm")}\n`;
+                    let replyMsg = `現在時間 ${moment.tz(new Date(), "Asia/Hong_Kong").format("HH:mm")}\n`;
                     replyMsg += `車站 : ${cName} \n`;
                     replyMsg += `起點 : ${oriCName}\n`;
                     replyMsg += `終站 : ${destCName}\n`;
