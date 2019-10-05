@@ -6,6 +6,7 @@ var financialHelper = require('./financial_helper.js');
 var paymentHelper = require('./payment_helper.js');
 var visionHelper = require('./vision_helper.js');
 var translateHelper = require('./translate_helper.js');
+var voiceHelper = require('./voice_helper.js');
 var busHelper = require('./bus_helper.js');
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
@@ -67,6 +68,7 @@ function createApplication(opts) {
     visionHelper = visionHelper(bot, opts);
     translateHelper = translateHelper(bot, opts);
     busHelper = busHelper(bot, opts);
+    voiceHelper = voiceHelper(bot, opts);
 
     // Event Handler
     bot.on('sticker', (ctx) => processSticker(ctx));
@@ -124,7 +126,7 @@ function processMessage(ctx) {
   isHandled = isHandled || visionHelper.handleRequest(ctx);
   isHandled = isHandled || translateHelper.handleRequest(ctx);
   isHandled = isHandled || busHelper.handleRequest(ctx);
-
+  isHandled = isHandled || voiceHelper.handleRequest(ctx);
   if (!isHandled) ctx.reply('❤️👍');
 }
 
@@ -142,9 +144,22 @@ function showHint(ctx) {
     return true;
   }
 
-  if (ctx.message.text == "1") {
-    return busHelper.showMenu(ctx);
+  switch (ctx.message.text) {
+    case "1":
+    case "2":
+    case "3":
+    case "4":
+    case "5":
+    case "6":
+    case "7":
+    case "8":
+    case "9":
+      return busHelper.showMenu(ctx);
+      break;
+    default:
+      break;
   }
+
 
   return false;
 }

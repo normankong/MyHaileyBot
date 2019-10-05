@@ -35,9 +35,7 @@ function createApplication(bot, opts) {
             var handler = ctx.telegram.getFile(fileID);
             handler.then(function (v) {
                 var url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${v.file_path}`;
-
                 app.proceedAPITrigger(ctx, url);
-
             });
         } else {
             ctx.reply("File is somehow error");

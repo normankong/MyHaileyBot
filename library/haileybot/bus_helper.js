@@ -19,12 +19,12 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        let config = require(process.env.BUS_CONFIG_FILE);
-        for (var i = 0; i < config.data.length; i++) {
-            let routeObject = config.data[i];
-            let routeID = `${routeObject.busRoute}-${routeObject.bsiCode}`;
-            bot.action(routeID, (ctx) => app.proceedBusMenu(ctx, routeObject));
-        }
+        // let config = require(process.env.BUS_CONFIG_FILE);
+        // for (var i = 0; i < config.data.length; i++) {
+        //     let routeObject = config.data[i];
+        //     let routeID = `${routeObject.busRoute}-${routeObject.bsiCode}`;
+        //     bot.action(routeID, (ctx) => app.proceedBusMenu(ctx, routeObject));
+        // }
     }
 
     app.handleRequest = function (ctx) {
@@ -124,15 +124,15 @@ function createApplication(bot, opts) {
 
     app.showMenu = function (ctx) {
         var message = "請選擇路線 😎😎😎"
-        //ctx.reply(message);
+
         let keyboardList = [];
         let rowList = [];
         let config = require(process.env.BUS_CONFIG_FILE);
         for (var i = 0; i < config.data.length; i++) {
             let routeObject = config.data[i];
+            let key = routeObject.key;
+            if (key != ctx.message.text) continue;
             let desc = `${routeObject.busRoute} : ${routeObject.desc}`;
-            let routeID = `${routeObject.busRoute}-${routeObject.bsiCode}`;
-            //keyboardList.push(Markup.callbackButton(desc, routeID));
             rowList.push(desc);
             
             if (rowList.length == 3) {
