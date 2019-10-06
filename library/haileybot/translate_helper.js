@@ -15,9 +15,8 @@ function createApplication(bot, opts) {
     app.getOpts = function () {
         return opts;
     }
-   
-    app.setVoiceHelper = function(inVoiceHelper)
-    {
+
+    app.setVoiceHelper = function (inVoiceHelper) {
         voiceHelper = inVoiceHelper;
         return app;
     }
@@ -65,18 +64,19 @@ function createApplication(bot, opts) {
 
                 console.log(`Translate Helper Response : ${JSON.stringify(response.data)}`);
                 if (response.data.code == "000") {
-                    console.log(response.data.message)
-                    console.log(response.data.message)
-                    console.log(response.data.message)
-                    console.log(response.data.message)
-                    console.log(response.data.message)
-                    ctx.reply(response.data.message)
-                    // Trigger callback if any
-                    if (callback) callback(response.data.message);
 
-                    setTimeout(() => {
-                        app.proceedTextToSpeech(ctx, response.data.message);
-                    }, 1000);
+                    // Show the Translate response: 
+                    ctx.reply(`翻譯 : ${response.data.message}`);
+
+                    // Trigger callback if any
+                    if (callback) {
+                        callback(response.data.message);
+                    } else {
+                        setTimeout(() => {
+                            app.proceedTextToSpeech(ctx, response.data.message);
+                        }, 1000);
+                    }
+
                 } else {
                     ctx.reply("Unable to Translate");
                 }
@@ -95,7 +95,7 @@ function createApplication(bot, opts) {
      */
     app.proceedTextToSpeech = function (ctx, text) {
         console.log("app.proceedTextToSpeech");
-        
+
         voiceHelper.proceedTextToSpeech(ctx, text);
     };
 
@@ -138,15 +138,15 @@ function createApplication(bot, opts) {
     app.showMenu = function (ctx) {
         var message = "請選擇翻譯語言 😎😎😎"
         const keyboard = Markup.inlineKeyboard([
-          Markup.callbackButton('中文', 'zh-TW'),
-          Markup.callbackButton('英文', 'en'),
-          Markup.callbackButton('日文', 'ja'),
-          Markup.callbackButton('韓文', 'ko'),
+            Markup.callbackButton('中文', 'zh-TW'),
+            Markup.callbackButton('英文', 'en'),
+            Markup.callbackButton('日文', 'ja'),
+            Markup.callbackButton('韓文', 'ko'),
         ])
         ctx.reply(message, Extra.HTML().markup(keyboard));
         return true;
     }
-    
+
     // Initialize the App
     app.init();
     return app;
