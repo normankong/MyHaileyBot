@@ -6,10 +6,17 @@ const DEFAULT_ACTION = "EXTRACT"
 function createApplication(bot, opts) {
     var bot = bot;
     var opts = opts;
+    var translateHelper;
     var app = {};
 
     app.getOpts = function () {
         return opts;
+    }
+
+    app.setTranslateHelper = function(inTranslateHelper)
+    {
+        translateHelper = inTranslateHelper;
+        return app;
     }
 
     app.init = function () {
@@ -49,26 +56,17 @@ function createApplication(bot, opts) {
     app.proceedAPITrigger = function (ctx, url) {
 
         console.log(url + " : " + app.getAction(ctx));
-        var header = {
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        };
-        var data = {
-            url: url,
-            action: app.getAction(ctx)
-        };
 
         // Perform Post
         axios({
                 method: "POST",
                 url: process.env.GOOGLE_VISION_TEXT_API,
-                headers: header,
-                data: data
+                headers: app.getHeader(),
+                data: app.getBody(ctx, url)
             })
             .then(function (response) {
 
-                console.log(`Response : ${response.data.code} : ${response.data.message}`);
+                console.log(`Vision Helper Response : ${response.data}`);
                 if (response.data.code == "000") {
                     let text = response.data.message;
                     ctx.reply(text);
@@ -107,38 +105,29 @@ function createApplication(bot, opts) {
      * @param {Text} text
      */
     app.proceedTranslate = function (ctx, text) {
-
-        var header = {
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        };
-        var data = {
-            text: text
-        };
-
-        // Perform Post
-        axios({
-                method: "POST",
-                url: process.env.GOOGLE_TRANSLATE_API,
-                headers: header,
-                data: data
-            })
-            .then(function (response) {
-
-                console.log(`Response : ${response.data.code} : ${response.data.message}`);
-                if (response.data.code == "000") {
-                    ctx.reply(response.data.message)
-                } else {
-                    ctx.reply("Unable to Translate");
-                }
-            })
-            .catch(function (error) {
-                ctx.reply("Unknown errors");
-                console.log(error);
-            });
+        console.log("app.proceedTranslate");
+        let params = {text : text, lang : "zh-TW"};
+        translateHelper.processTranslate(ctx, params, (translatedText) => {
+           ctx.reply(translatedText);
+        });
     };
 
+    app.getHeader = function () {
+        let header = {
+            "Content-Type": "application/json",
+            "Authorization": process.env.GOOGLE_VISION_TEXT_JWT_TOKEN
+        }
+        return header;
+    }
+
+    app.getBody = function (ctx, url) {
+        let body = {
+            "identify": process.env.GOOGLE_VISION_TEXT_JWT_USER,
+            "url": url
+        }
+
+        return body;
+    }
 
     // Initialize the App
     app.init();

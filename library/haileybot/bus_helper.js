@@ -18,14 +18,7 @@ function createApplication(bot, opts) {
         return opts;
     }
 
-    app.init = function () {
-        // let config = require(process.env.BUS_CONFIG_FILE);
-        // for (var i = 0; i < config.data.length; i++) {
-        //     let routeObject = config.data[i];
-        //     let routeID = `${routeObject.busRoute}-${routeObject.bsiCode}`;
-        //     bot.action(routeID, (ctx) => app.proceedBusMenu(ctx, routeObject));
-        // }
-    }
+    app.init = function () {}
 
     app.handleRequest = function (ctx) {
 
@@ -36,19 +29,15 @@ function createApplication(bot, opts) {
             let desc = `${routeObject.busRoute} : ${routeObject.desc}`;
             if (msg == desc)
             {
-                app.proceedBusMenu(ctx, routeObject);
+                app.proceedBusRequest(ctx, routeObject.busRoute, routeObject.bsiCode, routeObject.busBound)
                 return true;
             }
         }
         return false;
     }
 
-
-    app.proceedBusMenu = function (ctx, routeObject) {
-        return app.proceedBusRequest(ctx, routeObject.busRoute, routeObject.bsiCode, routeObject.busBound);
-    }
     /**
-     * Proceed Stock Quote
+     * Proceed Bus Request
      * @param {Telegram Context} ctx 
      * @param {busRoute} busRoute 
      */

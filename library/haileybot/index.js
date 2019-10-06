@@ -65,10 +65,10 @@ function createApplication(opts) {
     // Initialize Helpers
     financialHelper = financialHelper(bot, opts);
     paymentHelper = paymentHelper(bot, opts);
-    visionHelper = visionHelper(bot, opts);
     translateHelper = translateHelper(bot, opts);
+    visionHelper = visionHelper(bot, opts).setTranslateHelper(translateHelper);
     busHelper = busHelper(bot, opts);
-    voiceHelper = voiceHelper(bot, opts);
+    voiceHelper = voiceHelper(bot, opts).setTranslateHelper(translateHelper);
 
     // Event Handler
     bot.on('sticker', (ctx) => processSticker(ctx));
@@ -142,6 +142,10 @@ function showHint(ctx) {
     ])
     ctx.reply(message, Extra.HTML().markup(keyboard));
     return true;
+  }
+
+  if (ctx.message.text == "0") {
+    return translateHelper.showMenu(ctx);
   }
 
   switch (ctx.message.text) {
