@@ -1,0 +1,28 @@
+{
+    "data": [
+        {
+            "code": "CHINESE",
+            "desc": "中文",
+            "translateCode": "zh-TW",
+            "speechCode": "zh"
+        },
+        {
+            "code": "ENGLISH",
+            "desc": "英文",
+            "translateCode": "en",
+            "speechCode": "en-US"
+        },
+        {
+            "code": "JAPANESE",
+            "desc": "日文",
+            "translateCode": "ja",
+            "speechCode": "ja-JP"
+        },
+        {
+            "code": "KOREAN",
+            "desc": "韓文",
+            "translateCode": "ko",
+            "speechCode": "ko-KR"
+        }
+    ]
+}

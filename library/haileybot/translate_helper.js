@@ -2,7 +2,6 @@
 
 let axios = require("axios");
 const TRANSLATE_ACTION = "TRANSLATE";
-const DEFAULT_TARGET_LANGUAGE = "en";
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 
@@ -11,7 +10,8 @@ function createApplication(bot, opts) {
     var opts = opts;
     var voiceHelper = null;
     var app = {};
-
+    let languageMap = [];
+    
     app.getOpts = function () {
         return opts;
     }
@@ -23,10 +23,15 @@ function createApplication(bot, opts) {
 
     app.init = function () {
         bot.action('TRANSLATE', (ctx) => app.setAction(ctx));
-        bot.action('zh-TW', (ctx) => app.setTargetLanguage(ctx));
-        bot.action('en', (ctx) => app.setTargetLanguage(ctx));
-        bot.action('ja', (ctx) => app.setTargetLanguage(ctx));
-        bot.action('ko', (ctx) => app.setTargetLanguage(ctx));
+
+        let config = require(process.env.GOOGLE_TRANSLATE_CONFIG_FILE);
+        for (let i = 0; i < config.data.length; i++) {
+            let object = config.data[i];
+            bot.action(object.code, (ctx) => app.setTargetLanguage(ctx));
+
+            // Initialize the Language Map
+            languageMap[object.code] = object;
+        }
     }
 
     app.handleRequest = function (ctx) {
@@ -127,22 +132,31 @@ function createApplication(bot, opts) {
 
     app.setTargetLanguage = function (ctx) {
         ctx.session.language = ctx.match;
-        ctx.reply(`Target language : ${ctx.match}`)
+        ctx.reply(`已選擇翻譯語言 : ${languageMap[ctx.session.language].desc}`)
     }
 
     app.getTargetLanguage = function (ctx) {
-        if (ctx.session.language == null) ctx.session.language = DEFAULT_TARGET_LANGUAGE;
-        return ctx.session.language;
+        if (ctx.session.language == null) ctx.session.language = process.env.DEFAULT_LANGUAGE_CODE;
+        return languageMap[ctx.session.language].translateCode;
     }
 
     app.showMenu = function (ctx) {
         var message = "請選擇翻譯語言 😎😎😎"
-        const keyboard = Markup.inlineKeyboard([
-            Markup.callbackButton('中文', 'zh-TW'),
-            Markup.callbackButton('英文', 'en'),
-            Markup.callbackButton('日文', 'ja'),
-            Markup.callbackButton('韓文', 'ko'),
-        ])
+
+        let config = require(process.env.GOOGLE_TRANSLATE_CONFIG_FILE);
+        let callbackButtonList = [];
+        for (let i = 0; i < config.data.length; i++) {
+            let object = config.data[i];
+            callbackButtonList.push(Markup.callbackButton(object.desc, object.code));
+        }
+
+        const keyboard = Markup.inlineKeyboard(callbackButtonList);
+        // [
+        //     Markup.callbackButton('中文', 'zh-TW'),
+        //     Markup.callbackButton('英文', 'en'),
+        //     Markup.callbackButton('日文', 'ja'),
+        //     Markup.callbackButton('韓文', 'ko'),
+        // ])
         ctx.reply(message, Extra.HTML().markup(keyboard));
         return true;
     }

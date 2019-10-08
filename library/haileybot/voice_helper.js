@@ -2,7 +2,6 @@
 
 require('dotenv').config();
 let axios = require("axios");
-const DEFAULT_LANGUAGE_CODE = 'en';
 
 function createApplication(bot, opts) {
     var bot = bot;
@@ -15,6 +14,7 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
+        let config = require(process.env.GOOGLE_TRANSLATE_CONFIG_FILE);
     }
 
     app.setTranslateHelper = function(inTranslateHelper)
@@ -66,7 +66,7 @@ function createApplication(bot, opts) {
                     if (response.data.code == "000") {
                         console.log(`Extracted : ${response.data.message}`);
                         let text = `${response.data.message}`;
-                        ctx.reply(text);
+                        ctx.reply(`解讀 : ${text}`);
 
                         setTimeout(() => {
                             app.proceedTranslate(ctx, text);
@@ -150,7 +150,7 @@ function createApplication(bot, opts) {
     }
 
     app.getTextToSpeechBody = function (ctx, text) {
-        if (ctx.session.language == null) ctx.session.language = DEFAULT_LANGUAGE_CODE;
+        if (ctx.session.language == null) ctx.session.language = process.env.DEFAULT_LANGUAGE_CODE;
         
         return {
             "identify": process.env.GOOGLE_TEXT_TO_SPEECH_JWT_USER,
