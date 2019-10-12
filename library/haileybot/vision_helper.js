@@ -1,7 +1,8 @@
 'use strict';
 
 let axios = require("axios");
-const DEFAULT_ACTION = "EXTRACT"
+const DEFAULT_ACTION = "EXTRACT";
+const TRANSLATE_ACTION = "TRANSLATE";
 
 function createApplication(bot, opts) {
     var bot = bot;
@@ -20,16 +21,19 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        bot.action('EXTRACT', (ctx) => app.setAction(ctx));
-        bot.action('PREDICT', (ctx) => app.setAction(ctx));
     }
 
     app.handleRequest = function (ctx) {
-        // Proceed Vision API
-        if (ctx.message.photo != null) {
-            app.proceedVision(ctx);
-            return true;
-        }
+
+        // If calling me
+        if ((app.getAction(ctx) == DEFAULT_ACTION || app.getAction(ctx) == TRANSLATE_ACTION))
+        {
+            // Proceed Vision API
+            if (ctx.message.photo != null) {
+                app.proceedVision(ctx);
+                return true;
+            }
+        } 
         return false;
     }
 
@@ -89,14 +93,7 @@ function createApplication(bot, opts) {
     };
 
     app.getAction = function (ctx) {
-        if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
         return ctx.session.action;
-    }
-
-    app.setAction = function (ctx) {
-        console.log(`Action : ${ctx.match}`);
-        ctx.session.action = ctx.match;
-        ctx.reply("Update Session Action " + ctx.match);
     }
 
     /**

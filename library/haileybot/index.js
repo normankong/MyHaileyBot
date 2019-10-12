@@ -8,9 +8,12 @@ var visionHelper = require('./vision_helper.js');
 var translateHelper = require('./translate_helper.js');
 var voiceHelper = require('./voice_helper.js');
 var busHelper = require('./bus_helper.js');
+var tripHelper = require('./trip_helper.js');
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 const session = require('telegraf/session');
+const util = require('util');
+const DEFAULT_ACTION = "TRIP";
 
 function createApplication(opts) {
   var opts = opts;
@@ -32,8 +35,12 @@ function createApplication(opts) {
     var middleware = opts.middleware;
     var adminUser = opts.adminUser;
 
+    const config = {
+      telegram: { webhookReply: false }
+    };
+
     // Initialize Bot Instance
-    bot = new Telegraf(token);
+    bot = new Telegraf(token, config);
     // Add Event Handler
     bot.use(session());
 
@@ -69,15 +76,15 @@ function createApplication(opts) {
     visionHelper = visionHelper(bot, opts).setTranslateHelper(translateHelper);
     busHelper = busHelper(bot, opts);
     voiceHelper = voiceHelper(bot, opts).setTranslateHelper(translateHelper);
+    tripHelper = tripHelper(bot, opts);
 
-    // Event Handler
-    bot.on('sticker', (ctx) => processSticker(ctx));
-    bot.on('message', (ctx) => processMessage(ctx));
-    bot.action('CLEAR', (ctx) => app.clearAction(ctx));
+    // Set Event
+    app.initEvent(bot);
 
     bot.command('start', ctx => {
       return ctx.reply('Hey ! Nice to meet you');
     })
+
   };
 
   // Send Admin only message;
@@ -98,10 +105,89 @@ function createApplication(opts) {
     }
   }
 
-  app.clearAction = function (ctx) {
-    console.log(`Clear all action`);
-    ctx.session.action = null
-    ctx.reply("Clear all action");
+  app.setAction = function (ctx) {
+    console.log(`Action : ${ctx.match}`);
+    ctx.session.action = ctx.match;
+    ctx.reply("Update Session Action " + ctx.match);
+  }
+
+  app.initEvent = function (bot) {
+
+    // Event Handler
+    bot.on('sticker', (ctx) => app.processSticker(ctx));
+    bot.on('message', (ctx) => app.processMessage(ctx));
+
+    // Set Action Button
+    bot.action('CLEAR', (ctx) => ctx.session.action = null);
+    bot.action('TRIP', (ctx) => app.setAction(ctx));
+    bot.action('PREDICT', (ctx) => app.setAction(ctx));
+    bot.action('TRANSLATE', (ctx) => app.setAction(ctx));
+  }
+
+
+  app.processSticker = function (ctx) {
+    console.log("Incoming Sticker");
+    ctx.reply('❤️');
+  }
+
+
+  app.processMessage = function (ctx) {
+    console.debug(`Incoming request`);
+    //  console.log(util.inspect(ctx))
+    //console.log(JSON.stringify(ctx.message));
+    // console.log(ctx.message.location);
+    // Set Default Action;
+    if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
+
+    let isHandled = false;
+    isHandled = isHandled || app.showHint(ctx);
+
+    isHandled = isHandled || financialHelper.handleRequest(ctx);
+    isHandled = isHandled || paymentHelper.handleRequest(ctx);
+    isHandled = isHandled || visionHelper.handleRequest(ctx);
+    isHandled = isHandled || translateHelper.handleRequest(ctx);
+    isHandled = isHandled || busHelper.handleRequest(ctx);
+    isHandled = isHandled || voiceHelper.handleRequest(ctx);
+    isHandled = isHandled || tripHelper.handleRequest(ctx);
+
+    if (!isHandled) ctx.reply('❤️👍');
+  }
+
+
+  app.showHint = function (ctx) {
+
+    if (ctx.message.text == "?") {
+      var message = "Please Select Action"
+      const keyboard = Markup.inlineKeyboard([
+        Markup.callbackButton('Translate ?', 'TRANSLATE'),
+        Markup.callbackButton('Extract ?', 'EXTRACT'),
+        Markup.callbackButton('Trip ?', 'TRIP'),
+        Markup.callbackButton('Clear ?', 'CLEAR'),
+      ])
+      ctx.reply(message, Extra.HTML().markup(keyboard));
+      return true;
+    }
+
+    if (ctx.message.text == "0") {
+      translateHelper.showMenu(ctx);
+      return true;
+    }
+
+    switch (ctx.message.text) {
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+      case "7":
+      case "8":
+      case "9":
+        busHelper.showMenu(ctx);
+        return true;
+    }
+
+    return false;
   }
 
   // Initialize the App
@@ -109,63 +195,7 @@ function createApplication(opts) {
   return app;
 }
 
-function processSticker(ctx) {
-  console.log("Incoming Sticker");
-  ctx.reply('❤️');
-}
 
 
-function processMessage(ctx) {
-  console.debug(`Incoming request`);
-
-  let isHandled = false;
-  isHandled = isHandled || showHint(ctx);
-
-  isHandled = isHandled || financialHelper.handleRequest(ctx);
-  isHandled = isHandled || paymentHelper.handleRequest(ctx);
-  isHandled = isHandled || visionHelper.handleRequest(ctx);
-  isHandled = isHandled || translateHelper.handleRequest(ctx);
-  isHandled = isHandled || busHelper.handleRequest(ctx);
-  isHandled = isHandled || voiceHelper.handleRequest(ctx);
-  if (!isHandled) ctx.reply('❤️👍');
-}
-
-function showHint(ctx) {
-
-  if (ctx.message.text == "?") {
-    var message = "Please Select Action"
-    const keyboard = Markup.inlineKeyboard([
-      Markup.callbackButton('Translate ?', 'TRANSLATE'),
-      Markup.callbackButton('Extract ?', 'EXTRACT'),
-      Markup.callbackButton('Predict ?', 'PREDICT'),
-      Markup.callbackButton('Clear ?', 'CLEAR'),
-    ])
-    ctx.reply(message, Extra.HTML().markup(keyboard));
-    return true;
-  }
-
-  if (ctx.message.text == "0") {
-    return translateHelper.showMenu(ctx);
-  }
-
-  switch (ctx.message.text) {
-    case "1":
-    case "2":
-    case "3":
-    case "4":
-    case "5":
-    case "6":
-    case "7":
-    case "8":
-    case "9":
-      return busHelper.showMenu(ctx);
-      break;
-    default:
-      break;
-  }
-
-
-  return false;
-}
 
 exports = module.exports = createApplication;

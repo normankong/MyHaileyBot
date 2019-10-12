@@ -22,7 +22,6 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        bot.action('TRANSLATE', (ctx) => app.setAction(ctx));
 
         let config = require(process.env.GOOGLE_TRANSLATE_CONFIG_FILE);
         for (let i = 0; i < config.data.length; i++) {
@@ -106,12 +105,6 @@ function createApplication(bot, opts) {
 
     app.getAction = function (ctx) {
         return ctx.session.action;
-    }
-
-    app.setAction = function (ctx) {
-        console.log(`Action : ${ctx.match}`);
-        ctx.session.action = ctx.match;
-        ctx.reply("Update action " + ctx.match);
     }
 
     app.getHeader = function () {

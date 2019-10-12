@@ -13,9 +13,7 @@ function createApplication(bot, opts) {
         return opts;
     }
 
-    app.init = function () {
-        let config = require(process.env.GOOGLE_TRANSLATE_CONFIG_FILE);
-    }
+    app.init = function () {}
 
     app.setTranslateHelper = function(inTranslateHelper)
     {
