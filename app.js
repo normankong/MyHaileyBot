@@ -7,7 +7,11 @@ var https = require('https');
 const express = require('express');
 const expressApp = express();
 var fs = require('fs');
+const os = require('os');
 var haileyBot = require("./library/haileybot/index.js");
+
+// Initialize Environment variable
+initialize()
 
 if (process.env.ENVIRONMENT == "PRD") {
   // Attach Express to existing server
@@ -140,4 +144,29 @@ function notifyBotWithImage(json) {
     .catch(error => {
       console.log(error);
     });
+}
+
+function initialize() {
+  if (process.env.LOCAL_NAME == os.userInfo().username) {
+    console.log('Dev Environment')
+    process.env.ENVIRONMENT = process.env.DEV_ENVIRONMENT;
+    process.env.BOT_TOKEN = process.env.DEV_BOT_TOKEN;
+    process.env.BOT_CERT = process.env.DEV_BOT_CERT;
+    process.env.BOT_PUBLIC_KEY = process.env.DEV_BOT_PUBLIC_KEY;
+    process.env.BOT_PRIVATE_KEY = process.env.DEV_BOT_PRIVATE_KEY;
+    process.env.BOT_WEBHOOK_URL = process.env.DEV_BOT_WEBHOOK_URL;
+    process.env.BOT_PORT = process.env.DEV_BOT_PORT;
+    process.env.BOT_ACTIVATE_WEBHOOK = process.env.DEV_BOT_ACTIVATE_WEBHOOK;
+
+  } else {
+    console.log('Prd Environment')
+    process.env.ENVIRONMENT = process.env.PRD_ENVIRONMENT;
+    process.env.BOT_TOKEN = process.env.PRD_BOT_TOKEN;
+    process.env.BOT_CERT = process.env.PRD_BOT_CERT;
+    process.env.BOT_PUBLIC_KEY = process.env.PRD_BOT_PUBLIC_KEY;
+    process.env.BOT_PRIVATE_KEY = process.env.PRD_BOT_PRIVATE_KEY;
+    process.env.BOT_WEBHOOK_URL = process.env.PRD_BOT_WEBHOOK_URL;
+    process.env.BOT_PORT = process.env.PRD_BOT_PORT;
+    process.env.BOT_ACTIVATE_WEBHOOK = process.env.PRD_BOT_ACTIVATE_WEBHOOK;
+  }
 }

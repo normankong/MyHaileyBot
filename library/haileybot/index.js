@@ -134,8 +134,9 @@ function createApplication(opts) {
   app.processMessage = function (ctx) {
     console.debug(`Incoming request`);
     //  console.log(util.inspect(ctx))
-    //console.log(JSON.stringify(ctx.message));
+    console.log(JSON.stringify(ctx.message));
     // console.log(ctx.message.location);
+
     // Set Default Action;
     if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
 

@@ -29,7 +29,7 @@ function createApplication(bot, opts) {
             return true;
         }
         // Retrieve the Location then proceed the Download
-        if (ctx.session.url != null && ctx.message.location != null) {
+        if (ctx.session.photoList != null && ctx.session.photoList.length != 0 && ctx.message.location != null) {
             console.log("Retrieve the Location then proceed the Download");
             app.processUpload(ctx);
             return true;
@@ -38,6 +38,14 @@ function createApplication(bot, opts) {
     }
 
     app.determineURL = function (ctx) {
+        let caption = ctx.message.caption;
+        let first_name = ctx.message.from.first_name;
+        let username = ctx.message.from.username;
+        console.log(`Caption : [${caption}]`);
+        if (caption == null) {
+            //     console.log("No Caption");
+            //     caption = "";
+        }
 
         // Use the biggest files
         var fileID = ctx.message.photo[ctx.message.photo.length - 1].file_id;
@@ -47,20 +55,27 @@ function createApplication(bot, opts) {
                 var url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${v.file_path}`;
 
                 // Cache the URL in session
-                ctx.session.url = url;
+                if (ctx.session.photoList == null) ctx.session.photoList = [];
+                ctx.session.photoList.push({
+                    url: url,
+                    caption: caption,
+                    first_name: first_name,
+                    username: username
+                });
 
-                // app.proceedAPITrigger(ctx, url);
-
-                // Generate Asking Info
-                const keyboard = Extra.markup(markup =>
-                    markup
-                    .oneTime()
-                    .resize()
-                    .keyboard([
-                        markup.locationRequestButton('Please give me location')
-                    ])
-                )
-                ctx.replyWithMarkdown(`😘亲 : 在那裹影 ?`, keyboard);
+                // Send Ack every 10 photos
+                if (ctx.session.photoList.length % 9 == 1) {
+                    // Generate Asking Info
+                    const keyboard = Extra.markup(markup =>
+                        markup
+                        .oneTime()
+                        .resize()
+                        .keyboard([
+                            markup.locationRequestButton('Please give me location')
+                        ])
+                    )
+                    ctx.replyWithMarkdown(`😘亲 : 在那裹影 ?`, keyboard);
+                }
             });
         } else {
             ctx.reply("File is somehow error");
@@ -68,7 +83,6 @@ function createApplication(bot, opts) {
     }
 
     app.processUpload = function (ctx) {
-        let url = ctx.session.url;
 
         let location = ctx.message.location;
         let latitude = location.latitude;
@@ -81,18 +95,24 @@ function createApplication(bot, opts) {
         geocodeURL = geocodeURL.replace("{{LONGITUDE}}", longitude);
         geocodeURL = geocodeURL.replace("{{API_KEY}}", geocodeKey);
 
-
         axios.get(geocodeURL)
             .then(response => {
                 let metadata = {
-                    username : ctx.message.from,
-                    date : ctx.message.date,
+                    username: ctx.message.from,
+                    date: ctx.message.date,
                     latitude: latitude,
                     longitude: longitude,
                     placeName: response.data.results[0].formatted_address,
                     fullAddress: response.data
                 }
-                app.proceedAPITrigger(ctx, url, metadata);
+
+                console.log(`Location : ${metadata.latitude} ${metadata.longitude} ${metadata.placeName}`)
+
+                ctx.reply(`🌩🌩🌩 上傳中 ${metadata.placeName}`);
+
+                // Process upload recursively
+                app.proceedAPITrigger(ctx, metadata);
+
             })
             .catch(error => {
                 console.log(error);
@@ -103,10 +123,28 @@ function createApplication(bot, opts) {
      * @param {Telegram Context} ctx 
      * @param {URL for the image} url 
      */
-    app.proceedAPITrigger = function (ctx, url, metadata) {
-        
-        console.log(`Download file ${url} with location ${metadata.latitude} ${metadata.longitude} ${metadata.placeName}`);
-        ctx.reply(`🌩🌩🌩 上傳中 ${metadata.placeName}`); 
+    app.proceedAPITrigger = function (ctx, metadata, defaultParam) {
+
+        if (ctx.session.photoList.length == 0) {
+            console.log("Process completed")
+            setTimeout(() => ctx.reply(`🌍🌏🌍 Upload completed`), 500);
+            return;
+        }
+        // Retrieve the first photo url
+        let photoObject = ctx.session.photoList.shift();
+
+        // Carry last caption if available
+        if (defaultParam == null) defaultParam = {};
+        if (photoObject.caption != null) defaultParam.caption = photoObject.caption;
+
+        // Merge metadata
+        metadata.caption = defaultParam.caption;
+        metadata.username = photoObject.username;
+        metadata.first_name = photoObject.first_name;
+
+        let url = photoObject.url;
+        console.log(`Download file ${url}`);
+
         // Perform Post
         axios({
                 method: "POST",
@@ -118,8 +156,9 @@ function createApplication(bot, opts) {
 
                 console.log(`GCP Storage API : ${response.data.code}`);
                 if (response.data.code == "000") {
-                    ctx.reply(`Upload to ${response.data.filename}`);
-                    ctx.session.url = null;
+                    //ctx.reply(`Upload to ${response.data.filename}`);
+                    // Process the next one
+                    app.proceedAPITrigger(ctx, metadata, defaultParam);
                 } else {
                     ctx.reply(response.data.message);
                 }
@@ -144,10 +183,10 @@ function createApplication(bot, opts) {
     app.getBody = function (ctx, url, metadata) {
         let body = {
             "identify": process.env.GOOGLE_STORAGE_JWT_USER,
-            "url": url, 
-            "metadata" : metadata
+            "url": url,
+            "metadata": metadata
         }
-        // console.log(body);
+        //console.log(body);
         return body;
     }
 
