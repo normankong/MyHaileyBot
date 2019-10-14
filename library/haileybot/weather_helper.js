@@ -136,10 +136,7 @@ function createApplication(bot, opts) {
     }
 
     app.proceedWeatherRequest = async function () {
-
-        let currWeather = await app.getURL("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc", app.currentFormatter);
-        let forecastWeather = await app.getURL("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=tc", app.forecastFormatter);
-
+        
         app.proceedWeatherQuote(null, (currWeather, forecastWeather) => {
             opts.myBot.sendAdminMarkdown(currWeather);
             opts.myBot.sendAdminMarkdown(forecastWeather);
