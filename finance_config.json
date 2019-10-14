@@ -1,0 +1,49 @@
+{
+    "cronExpression": "30 8 * * MON-FRI",
+    "stockList": [
+        {
+            "code": "0005",
+            "desc": "匯豐"
+        },
+        {
+            "code": "0011",
+            "desc": "恒生"
+        },
+        {
+            "code": "1257",
+            "desc": "中國光大綠色環保"
+        }
+    ],
+    "fxList": [
+        {
+            "from": "JPY",
+            "to": "HKD",
+            "q": "100"
+        },
+        {
+            "from": "EUR",
+            "to": "HKD",
+            "q": "1.0"
+        },
+        {
+            "from": "CAD",
+            "to": "HKD",
+            "q": "1.0"
+        },
+        {
+            "from": "AUD",
+            "to": "HKD",
+            "q": "1.0"
+        },
+        {
+            "from": "CHF",
+            "to": "HKD",
+            "q": "1.0"
+        },
+        {
+            "from": "USD",
+            "to": "HKD",
+            "q": "1.0"
+        }
+    ]
+}

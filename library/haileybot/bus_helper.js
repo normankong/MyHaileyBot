@@ -74,7 +74,7 @@ function createApplication(bot, opts) {
                         rows.push('😱😱😱暫時未能提供....')
                     }
 
-                    let replyMsg = `現在時間 ${moment.tz(new Date(), "Asia/Hong_Kong").format("HH:mm")}\n`;
+                    let replyMsg = `現在時間 ${moment.tz(new Date(), process.env.DEFAULT_TIMEZONE).format("HH:mm")}\n`;
                     replyMsg += `車站 : ${cName} \n`;
                     replyMsg += `起點 : ${oriCName}\n`;
                     replyMsg += `終站 : ${destCName}\n`;
@@ -82,7 +82,7 @@ function createApplication(bot, opts) {
                     replyMsg += `班次 : \n - ${rows.join("\n - ")}\n`;
                     replyMsg += `🚎🚌🚎🚌🚎🚌🚎🚌🚎🚌`;
 
-                    ctx.reply(replyMsg)
+                    app.replyMarkdown(ctx, replyMsg);
                 } else {
                     ctx.reply("Unable to process");
                 }
@@ -140,6 +140,12 @@ function createApplication(bot, opts) {
         )
 
         return true;
+    }
+
+    app.replyMarkdown = function (ctx, message) {
+        ctx.reply(`\`\`\`\n${message}\`\`\``, {
+            parse_mode: "Markdown"
+        });
     }
 
     // Initialize the App

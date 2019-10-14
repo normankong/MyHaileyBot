@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const Telegraf = require('telegraf');
 var financialHelper = require('./financial_helper.js');
+var weatherHelper = require('./weather_helper.js');
 var paymentHelper = require('./payment_helper.js');
 var visionHelper = require('./vision_helper.js');
 var translateHelper = require('./translate_helper.js');
@@ -12,8 +13,9 @@ var tripHelper = require('./trip_helper.js');
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 const session = require('telegraf/session');
+
 const util = require('util');
-const DEFAULT_ACTION = "TRIP";
+const DEFAULT_ACTION = process.env.DEFAULT_ACTION;
 
 function createApplication(opts) {
   var opts = opts;
@@ -35,8 +37,13 @@ function createApplication(opts) {
     var middleware = opts.middleware;
     var adminUser = opts.adminUser;
 
+    // Assign itself to myBot instance
+    opts.myBot = app;
+
     const config = {
-      telegram: { webhookReply: false }
+      telegram: {
+        webhookReply: false
+      }
     };
 
     // Initialize Bot Instance
@@ -66,7 +73,9 @@ function createApplication(opts) {
     }
 
     if (adminUser) {
-      bot.telegram.sendMessage(adminUser, "👍 Hello World");
+      bot.telegram.sendMessage(adminUser, "👍 Hello World", {
+        parse_mode: "Markdown"
+      });
     }
 
     // Initialize Helpers
@@ -77,6 +86,7 @@ function createApplication(opts) {
     busHelper = busHelper(bot, opts);
     voiceHelper = voiceHelper(bot, opts).setTranslateHelper(translateHelper);
     tripHelper = tripHelper(bot, opts);
+    weatherHelper = weatherHelper(bot, opts);
 
     // Set Event
     app.initEvent(bot);
@@ -88,11 +98,18 @@ function createApplication(opts) {
   };
 
   // Send Admin only message;
-  app.sendAdmin = function (message) {
+  app.sendAdmin = function (message, extra) {
     if (opts.adminUser) {
       console.log(`Sending message to ${opts.adminUser} with message : ${message}`);
-      bot.telegram.sendMessage(opts.adminUser, message);
+      bot.telegram.sendMessage(opts.adminUser, message, extra);
     }
+  }
+
+  // Send Admin with Markdown
+  app.sendAdminMarkdown = function (message) {
+    app.sendAdmin(`\`\`\`\n${message}\`\`\``, {
+      parse_mode: "Markdown"
+    });
   }
 
   // Send Admin image;
@@ -146,10 +163,11 @@ function createApplication(opts) {
     isHandled = isHandled || financialHelper.handleRequest(ctx);
     isHandled = isHandled || paymentHelper.handleRequest(ctx);
     isHandled = isHandled || visionHelper.handleRequest(ctx);
-    isHandled = isHandled || translateHelper.handleRequest(ctx);
     isHandled = isHandled || busHelper.handleRequest(ctx);
     isHandled = isHandled || voiceHelper.handleRequest(ctx);
     isHandled = isHandled || tripHelper.handleRequest(ctx);
+    isHandled = isHandled || weatherHelper.handleRequest(ctx);
+    isHandled = isHandled || translateHelper.handleRequest(ctx); // It must be the last one as it will perform translate
 
     if (!isHandled) ctx.reply('❤️👍');
   }
@@ -195,8 +213,5 @@ function createApplication(opts) {
   app.init();
   return app;
 }
-
-
-
 
 exports = module.exports = createApplication;

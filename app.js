@@ -97,38 +97,6 @@ function notifyBotWithMessage(json) {
   if (json.message != null) {
     haileyBot.sendAdmin(json.message);
   }
-
-  // // Structure Message
-  // if (json.data != null) {
-  //   for (let i = 0; i < json.data.length; i++) {
-  //     let object = json.data[i];
-
-  //     let message = "";
-  //     if (object.type == "ICT") {
-  //       let bank = object.bank;
-  //       let payer = object.payer;
-  //       let creditAmount = object.creditAmount;
-  //       let creditAccount = object.creditAccount;
-  //       message = `親 : ${payer} 使用轉數快過 ${creditAmount} 給你的 ${bank}，入賬戶口為 ${creditAccount}`;
-  //     }
-
-  //     if (object.type == "OCT") {
-  //       let bank = object.bank;
-  //       let payee = object.payee;
-  //       let debitAmount = object.debitAmount;
-  //       let debitAccount = object.debitAccount;
-  //       message = `親 : 你剛使用轉數快過 ${debitAmount} 給 ${payee}, 由 ${bank} 戶口 ${debitAccount} 扣除`;
-  //     }
-
-  //     if (object.type == "STM") {
-  //       let bank = object.bank;
-  //       let acct = object.acct;
-  //       message = `親 : 你有電子月結單，快來看看 : ${bank} ${acct}`;
-  //     }
-
-  //     haileyBot.sendAdmin(message);
-  //   }
-  // }
 }
 
 function notifyBotWithImage(json) {
