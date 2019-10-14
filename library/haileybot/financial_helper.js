@@ -48,18 +48,26 @@ function createApplication(bot, opts) {
             return true;
         }
 
+        // Handle FX Rate
         let isHandle = false;
-        for (let i=0; i < fxList.length; i++)
-        {
+        for (let i = 0; i < fxList.length; i++) {
             let fx = fxList[i];
-            if (subject == fx.from)
-            {
+            if (subject == fx.from) {
                 app.proceedFxRateQuote(ctx, fx);
-                isHandle = true;
+                return true;
             }
         }
 
-        return isHandle;
+        switch (subject.toUpperCase()) {
+            case "STOCK":
+                app.proceedScheduleStock(ctx);
+                return true;
+            case "FX":
+                app.proceedScheduleFxRate(ctx);
+                return true;
+        }
+
+        return false;
     }
 
     /**
@@ -88,7 +96,7 @@ function createApplication(bot, opts) {
         )
     }
 
-    app.proceedScheduleStock = function (inStockList, resultList) {
+    app.proceedScheduleStock = function (ctx, inStockList, resultList) {
         // Clone the Stock List during initialize
         if (inStockList == null) inStockList = stockList.slice(0);
         if (resultList == null) resultList = [];
@@ -101,7 +109,7 @@ function createApplication(bot, opts) {
             app.proceedStockQuote(null, stock.code, (result) => {
                 result.desc = stock.desc
                 resultList.push(result);
-                app.proceedScheduleStock(inStockList, resultList);
+                app.proceedScheduleStock(ctx, inStockList, resultList);
             });
             return;
         }
@@ -119,7 +127,11 @@ function createApplication(bot, opts) {
         }
         buffer += "|--------|--------|------------------------|\n";
 
-        opts.myBot.sendAdminMarkdown(buffer);
+        if (ctx != null) {
+            app.replyMarkdown(ctx, buffer);
+        } else {
+            opts.myBot.sendAdminMarkdown(buffer);
+        }
     }
 
     /**
@@ -146,13 +158,13 @@ function createApplication(bot, opts) {
                     fxQuote.rate = body;
                     callback(fxQuote);
                 } else {
-                    app.replyMarkdown(ctx,`${fxQuote.from}-${fxQuote.to} : $${ body }`);
+                    app.replyMarkdown(ctx, `${fxQuote.from}-${fxQuote.to} : $${ body }`);
                 }
             }
         )
     }
 
-    app.proceedScheduleFxRate = function (inFxList, resultList) {
+    app.proceedScheduleFxRate = function (ctx, inFxList, resultList) {
         // Clone the FX List during initialize
         if (inFxList == null) inFxList = fxList.slice(0);
         if (resultList == null) resultList = [];
@@ -164,7 +176,7 @@ function createApplication(bot, opts) {
             // Trigger Proceed Stock Quote with callback
             app.proceedFxRateQuote(null, fx, (result) => {
                 resultList.push(result);
-                app.proceedScheduleFxRate(inFxList, resultList);
+                app.proceedScheduleFxRate(ctx, inFxList, resultList);
             });
             return;
         }
@@ -181,7 +193,12 @@ function createApplication(bot, opts) {
         }
         buffer += "|---------|----------|";
 
-        opts.myBot.sendAdminMarkdown(buffer);
+
+        if (ctx != null) {
+            app.replyMarkdown(ctx, buffer);
+        } else {
+            opts.myBot.sendAdminMarkdown(buffer);
+        }
     }
 
     app.replyMarkdown = function (ctx, message) {
