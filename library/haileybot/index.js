@@ -209,6 +209,20 @@ function createApplication(opts) {
     return false;
   }
 
+  app.handleScheduler = function(query)
+  {
+    console.log(`HaileyBot handle scheduler task`);
+    let isHandled = false;
+    isHandled = isHandled || financialHelper.handleScheduler(query);
+    isHandled = isHandled || paymentHelper.handleScheduler(query);
+    isHandled = isHandled || translateHelper.handleScheduler(query);
+    isHandled = isHandled || visionHelper.handleScheduler(query);
+    isHandled = isHandled || busHelper.handleScheduler(query);
+    isHandled = isHandled || voiceHelper.handleScheduler(query);
+    isHandled = isHandled || tripHelper.handleScheduler(query);
+    isHandled = isHandled || weatherHelper.handleScheduler(query);
+  }
+
   // Initialize the App
   app.init();
   return app;

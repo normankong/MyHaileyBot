@@ -51,7 +51,7 @@ var botOpts = {
 }
 
 // Initiailize Hailey Bot
-var haileyBot = haileyBot(botOpts);
+haileyBot = haileyBot(botOpts);
 
 // Register Show Status End point
 expressApp.get('/showStatus', (req, res) => {
@@ -90,6 +90,12 @@ expressApp.post('/notifyBot', (req, res) => {
   });
 
 })
+
+// Scheduler Task
+expressApp.get('/scheduler', (req, res) => {
+  haileyBot.handleScheduler(req.query);
+  res.end(`ok`);
+});
 
 function notifyBotWithMessage(json) {
 

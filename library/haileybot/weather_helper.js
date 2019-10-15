@@ -2,8 +2,8 @@
 
 const request = require('request');
 const leftPad = require("left-pad");
-const cron = require('node-cron');
 const util = require('util')
+const SCHEDULER_ID = process.env.WEATHER_SCHEDULER_ID;
 
 const requestPromise = util.promisify(request);
 
@@ -71,16 +71,16 @@ function createApplication(bot, opts) {
     }
 
     app.init = async function () {
+        return false;
+    }
 
-        console.log(`Weather Scheduler express : ${process.env.WEATHER_CRON_EXPRESSION}`);
-        //app.proceedWeatherRequest();
-        cron.schedule(process.env.WEATHER_CRON_EXPRESSION, () => {
+    app.handleScheduler = function (query) {
+
+        if (query.id == SCHEDULER_ID) {
+            console.log("Executing Weather Helper scheduler jobs");
             app.proceedWeatherRequest();
-        }, {
-            scheduled: true,
-            timezone: process.env.DEFAULT_TIMEZONE
-        });
-
+            return true;
+        }
         return false;
     }
 
@@ -113,7 +113,9 @@ function createApplication(bot, opts) {
         } else {
             app.replyMarkdown(ctx, currWeather);
             app.replyMarkdown(ctx, forecastWeather);
-            ctx.reply("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm",{ disable_web_page_preview : "true"});
+            ctx.reply("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm", {
+                disable_web_page_preview: "true"
+            });
         }
 
         // let url = process.env.WEATHER_CURRENT_API_URL;
@@ -136,11 +138,15 @@ function createApplication(bot, opts) {
     }
 
     app.proceedWeatherRequest = async function () {
-        
+
         app.proceedWeatherQuote(null, (currWeather, forecastWeather) => {
             opts.myBot.sendAdminMarkdown(currWeather);
             opts.myBot.sendAdminMarkdown(forecastWeather);
-            setTimeout(() => {opts.myBot.sendAdmin("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm",{ disable_web_page_preview : "true"})}, 500);
+            setTimeout(() => {
+                opts.myBot.sendAdmin("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm", {
+                    disable_web_page_preview: "true"
+                })
+            }, 500);
         });
     }
 

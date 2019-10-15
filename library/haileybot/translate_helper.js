@@ -154,6 +154,10 @@ function createApplication(bot, opts) {
         return true;
     }
 
+    app.handleScheduler = function (query) {
+        return false;
+    }
+
     // Initialize the App
     app.init();
     return app;

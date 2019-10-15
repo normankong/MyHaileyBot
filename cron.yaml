@@ -1,0 +1,13 @@
+cron:
+- description: "Daily morning Weather"
+  url: /scheduler?id=WEATHER
+  schedule: every mon,tue,wed,thu,fri 07:45
+  timezone: Asia/Hong_Kong
+- description: "Daily morning FX"
+  url: /scheduler?id=FX
+  schedule: every mon,tue,wed,thu,fri 12:00
+  timezone: Asia/Hong_Kong
+- description: "Daily morning Stock"
+  url: /scheduler?id=STOCK
+  schedule: every mon,tue,wed,thu,fri 18:00
+  timezone: Asia/Hong_Kong

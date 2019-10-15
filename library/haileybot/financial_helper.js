@@ -2,7 +2,8 @@
 
 const request = require('request');
 const leftPad = require("left-pad");
-const cron = require('node-cron');
+const STOCK_SCHEDULER_ID = process.env.STOCK_SCHEDULER_ID;
+const FX_SCHEDULER_ID = process.env.FX_SCHEDULER_ID;
 
 function createApplication(bot, opts) {
     var bot = bot;
@@ -16,19 +17,23 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        let config = require(process.env.FINANCE_CONFIG);
+        let config = require(process.env.STOCK_CONFIG);
         stockList = config.stockList;
         fxList = config.fxList;
+        return false;
+    }
 
-        console.log(`Finance Scheduler express : ${config.cronExpression}`);
-
-        cron.schedule(config.cronExpression, () => {
+    app.handleScheduler = function (query) {
+        if (query.id == STOCK_SCHEDULER_ID) {
+            console.log("Executing Finance Helper Stock scheduler jobs");
             app.proceedScheduleStock();
+            return true;
+        }
+        if (query.id == FX_SCHEDULER_ID) {
+            console.log("Executing Finance Helper FX scheduler jobs");
             app.proceedScheduleFxRate();
-        }, {
-            scheduled: true,
-            timezone: process.env.DEFAULT_TIMEZONE
-        });
+            return true;
+        }
 
         return false;
     }
@@ -76,7 +81,7 @@ function createApplication(bot, opts) {
      * @param {Stock Tick} stockQuote 
      */
     app.proceedStockQuote = function (ctx, stockQuote, callback) {
-        let url = process.env.FINANCE_API_URL.replace("<%STOCK_QUOTE%>", leftPad(stockQuote, 5, "0"));
+        let url = process.env.STOCK_API_URL.replace("<%STOCK_QUOTE%>", leftPad(stockQuote, 5, "0"));
         console.log(`Processing url : ${url}`);
         request.get(url,
             function (error, response, body) {
@@ -116,16 +121,16 @@ function createApplication(bot, opts) {
 
         // Format and display stock quote result
         let buffer = "";
-        buffer += "|--------|--------|------------------------|\n";
-        buffer += "| Quote  | Price  | Name                   |\n";
-        buffer += "|--------|--------|------------------------|\n";
+        buffer += "|--------|--------|--------------\n";
+        buffer += "| Quote  | Price  | Name         \n";
+        buffer += "|--------|--------|--------------\n";
 
         for (let i = 0; i < resultList.length; i++) {
             let stock = resultList[i];
 
             buffer += `| ${leftPad(stock.code, 5, "0")}  |  ${leftPad(stock.price.toString(), 5, " ")} | ${stock.desc}\n`;
         }
-        buffer += "|--------|--------|------------------------|\n";
+        buffer += "|--------|--------|--------------\n";
 
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);

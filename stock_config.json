@@ -1,5 +1,4 @@
 {
-    "cronExpression": "30 8 * * MON-FRI",
     "stockList": [
         {
             "code": "0005",
