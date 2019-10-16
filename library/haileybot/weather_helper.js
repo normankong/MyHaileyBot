@@ -87,6 +87,7 @@ function createApplication(bot, opts) {
     app.handleRequest = function (ctx) {
 
         let subject = ctx.message.text;
+        if (subject == null) return false;
 
         if (subject.toUpperCase() == "WEATHER") {
             app.proceedWeatherQuote(ctx)

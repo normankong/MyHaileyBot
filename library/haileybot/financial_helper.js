@@ -41,6 +41,7 @@ function createApplication(bot, opts) {
     app.handleRequest = function (ctx) {
 
         let subject = ctx.message.text;
+        if (subject == null) return false;
 
         // Proceed Stock Quote
         var stockRegEx = new RegExp("(\\d*).hk", "i");
