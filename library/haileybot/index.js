@@ -99,8 +99,8 @@ function createApplication(opts) {
 
   // Send Admin only message;
   app.sendAdmin = function (message, extra) {
-    if (adminUser) {
-      let list = adminUser.split(",");
+    if (opts.adminUser) {
+      let list = opts.adminUser.split(",");
       for (let i = 0; i < list.length; i++) {
         console.log(`Sending message to ${list[i]} with message : ${message}`);
         bot.telegram.sendMessage(list[i], message, extra);
@@ -117,8 +117,8 @@ function createApplication(opts) {
 
   // Send Admin image;
   app.sendImage = function (buffer) {
-    if (adminUser) {
-      let list = adminUser.split(",");
+    if (opts.adminUser) {
+      let list = opts.adminUser.split(",");
       for (let i = 0; i < list.length; i++) {
         console.log(`Sending image to ${list[i]}`);
         bot.telegram.sendPhoto(list[i], {

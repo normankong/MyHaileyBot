@@ -36,7 +36,17 @@ if (process.env.ENVIRONMENT == "PRD") {
 // Start the Express Server
 expressApp.get('/', (req, res) => {
   res.send('Hello World!')
-  console.log("Sending Hello World")
+  console.log("Sending Hello World");
+})
+
+// Enable Healthchcek
+expressApp.get('/liveness_check', (req, res) => {
+  res.send('Hello World!')
+})
+
+// Readiness Check
+expressApp.get('/readiness_check', (req, res) => {
+  res.send('Hello World!')
 })
 
 // Prepare Telegram Bot Options
