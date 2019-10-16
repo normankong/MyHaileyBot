@@ -73,7 +73,7 @@ function createApplication(opts) {
     }
 
     if (adminUser) {
-      bot.telegram.sendMessage(adminUser, "👍 Hello World", {
+      bot.telegram.sendMessage(adminUser.split(",")[0], "👍 Hello World", {
         parse_mode: "Markdown"
       });
     }
@@ -99,9 +99,12 @@ function createApplication(opts) {
 
   // Send Admin only message;
   app.sendAdmin = function (message, extra) {
-    if (opts.adminUser) {
-      console.log(`Sending message to ${opts.adminUser} with message : ${message}`);
-      bot.telegram.sendMessage(opts.adminUser, message, extra);
+    if (adminUser) {
+      let list = adminUser.split(",");
+      for (let i = 0; i < list.length; i++) {
+        console.log(`Sending message to ${list[i]} with message : ${message}`);
+        bot.telegram.sendMessage(list[i], message, extra);
+      }
     }
   }
 
@@ -114,11 +117,14 @@ function createApplication(opts) {
 
   // Send Admin image;
   app.sendImage = function (buffer) {
-    if (opts.adminUser) {
-      console.log(`Sending image to ${opts.adminUser}`);
-      bot.telegram.sendPhoto(opts.adminUser, {
-        source: buffer
-      });
+    if (adminUser) {
+      let list = adminUser.split(",");
+      for (let i = 0; i < list.length; i++) {
+        console.log(`Sending image to ${list[i]}`);
+        bot.telegram.sendPhoto(list[i], {
+          source: buffer
+        });
+      }
     }
   }
 
@@ -209,8 +215,7 @@ function createApplication(opts) {
     return false;
   }
 
-  app.handleScheduler = function(query)
-  {
+  app.handleScheduler = function (query) {
     console.log(`HaileyBot handle scheduler task`);
     let isHandled = false;
     isHandled = isHandled || financialHelper.handleScheduler(query);
