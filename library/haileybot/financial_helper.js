@@ -11,6 +11,8 @@ function createApplication(bot, opts) {
     var app = {};
     var stockList = [];
     var fxList = [];
+    var stockSubscriberList = process.env.STOCK_SCHEDULER_SUBSCRIBER.split(",");
+    var fxSubscriberList = process.env.FX_SCHEDULER_SUBSCRIBER.split(",");
 
     app.getOpts = function () {
         return opts;
@@ -136,7 +138,7 @@ function createApplication(bot, opts) {
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);
         } else {
-            opts.myBot.sendAdminMarkdown(buffer);
+            opts.myBot.sendMarkdown(stockSubscriberList, buffer);
         }
     }
 
@@ -203,7 +205,7 @@ function createApplication(bot, opts) {
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);
         } else {
-            opts.myBot.sendAdminMarkdown(buffer);
+            opts.myBot.sendMarkdown(fxSubscriberList, buffer);
         }
     }
 

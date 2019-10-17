@@ -73,7 +73,7 @@ function createApplication(opts) {
     }
 
     if (adminUser) {
-      bot.telegram.sendMessage(adminUser.split(",")[0], "👍 Hello World", {
+      bot.telegram.sendMessage(adminUser, "👍 Hello World", {
         parse_mode: "Markdown"
       });
     }
@@ -97,14 +97,26 @@ function createApplication(opts) {
 
   };
 
+  // Send Message List with markdown
+  app.sendMarkdown = function (list, message) {
+    app.sendMessage(list, `\`\`\`\n${message}\`\`\``, {
+      parse_mode: "Markdown"
+    });
+  }
+
+  // Send Message List
+  app.sendMessage = function (list, message, extra) {
+    for (let i = 0; i < list.length; i++) {
+      console.log(`Sending message to ${list[i]} with message : ${message}`);
+      bot.telegram.sendMessage(list[i], message, extra);
+    }
+  }
+
   // Send Admin only message;
   app.sendAdmin = function (message, extra) {
     if (opts.adminUser) {
-      let list = opts.adminUser.split(",");
-      for (let i = 0; i < list.length; i++) {
-        console.log(`Sending message to ${list[i]} with message : ${message}`);
-        bot.telegram.sendMessage(list[i], message, extra);
-      }
+      console.log(`Sending message to ${opts.adminUser} with message : ${message}`);
+      bot.telegram.sendMessage(opts.adminUser, message, extra);
     }
   }
 

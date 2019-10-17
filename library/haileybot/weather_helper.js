@@ -11,6 +11,7 @@ function createApplication(bot, opts) {
     var bot = bot;
     var opts = opts;
     var app = {};
+    var subscriber = process.env.WEATHER_SCHEDULER_SUBSCRIBER.split(",");
     let iconTable = {
         "01d": "wi-day-sunny",
         "02d": "wi-day-cloudy",
@@ -141,13 +142,15 @@ function createApplication(bot, opts) {
     app.proceedWeatherRequest = async function () {
 
         app.proceedWeatherQuote(null, (currWeather, forecastWeather) => {
-            opts.myBot.sendAdminMarkdown(currWeather);
-            opts.myBot.sendAdminMarkdown(forecastWeather);
-            setTimeout(() => {
-                opts.myBot.sendAdmin("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm", {
-                    disable_web_page_preview: "true"
-                })
-            }, 500);
+
+            let subscriberList = subscriber.join(",");
+            opts.myBot.sendMarkdown(subscriberList, currWeather);
+            opts.myBot.sendMarkdown(subscriberList, forecastWeather);
+            // setTimeout(() => {
+            //     opts.myBot.sendAdmin("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm", {
+            //         disable_web_page_preview: "true"
+            //     })
+            // }, 500);
         });
     }
 
