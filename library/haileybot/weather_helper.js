@@ -143,7 +143,7 @@ function createApplication(bot, opts) {
 
         app.proceedWeatherQuote(null, (currWeather, forecastWeather) => {
 
-            let subscriberList = subscriber.join(",");
+            let subscriberList = subscriber;
             opts.myBot.sendMarkdown(subscriberList, currWeather);
             opts.myBot.sendMarkdown(subscriberList, forecastWeather);
             // setTimeout(() => {
