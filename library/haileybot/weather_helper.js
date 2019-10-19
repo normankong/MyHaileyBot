@@ -1,8 +1,9 @@
 'use strict';
 
 const request = require('request');
-const leftPad = require("left-pad");
 const util = require('util')
+var cacheHelper = require("./cache_helper.js");
+
 const SCHEDULER_ID = process.env.WEATHER_SCHEDULER_ID;
 
 const requestPromise = util.promisify(request);
@@ -11,7 +12,6 @@ function createApplication(bot, opts) {
     var bot = bot;
     var opts = opts;
     var app = {};
-    var subscriber = process.env.WEATHER_SCHEDULER_SUBSCRIBER.split(",");
     let iconTable = {
         "01d": "wi-day-sunny",
         "02d": "wi-day-cloudy",
@@ -71,7 +71,8 @@ function createApplication(bot, opts) {
         return opts;
     }
 
-    app.init = async function () {
+    app.init = function () {
+        cacheHelper = cacheHelper();
         return false;
     }
 
@@ -97,8 +98,6 @@ function createApplication(bot, opts) {
 
         return false;
     }
-
-
 
     /**
      * Proceed Weather Quote
@@ -139,18 +138,15 @@ function createApplication(bot, opts) {
         // )
     }
 
-    app.proceedWeatherRequest = async function () {
+    app.proceedWeatherRequest = function () {
 
-        app.proceedWeatherQuote(null, (currWeather, forecastWeather) => {
+        app.proceedWeatherQuote(null, async (currWeather, forecastWeather) => {
+            // Get the Latest subscriber list
+            let subscriberList = await app.getSubscriberList(SCHEDULER_ID);
+            console.log(`Subscriber : ${subscriberList}`);
 
-            let subscriberList = subscriber;
             opts.myBot.sendMarkdown(subscriberList, currWeather);
             opts.myBot.sendMarkdown(subscriberList, forecastWeather);
-            // setTimeout(() => {
-            //     opts.myBot.sendAdmin("😘亲 : 按這裹來看詳情 : https://my.hko.gov.hk/myindex.htm", {
-            //         disable_web_page_preview: "true"
-            //     })
-            // }, 500);
         });
     }
 
@@ -224,6 +220,15 @@ function createApplication(bot, opts) {
         });
     }
 
+    app.getSubscriberList = async function (type) {
+        let cacheResult = await cacheHelper.getCache(type, "DEFAULT");
+        let subscriber = JSON.parse(cacheResult).data;
+        if (subscriber == null) {
+            console.log("No one subscribe");
+            return [];
+        }
+        return subscriber.toString().split(',');
+    }
 
     // Initialize the App
     app.init();

@@ -2,6 +2,7 @@
 
 const request = require('request');
 const leftPad = require("left-pad");
+var cacheHelper = require("./cache_helper.js");
 const STOCK_SCHEDULER_ID = process.env.STOCK_SCHEDULER_ID;
 const FX_SCHEDULER_ID = process.env.FX_SCHEDULER_ID;
 
@@ -22,6 +23,7 @@ function createApplication(bot, opts) {
         let config = require(process.env.STOCK_CONFIG);
         stockList = config.stockList;
         fxList = config.fxList;
+        cacheHelper = cacheHelper();
         return false;
     }
 
@@ -104,7 +106,7 @@ function createApplication(bot, opts) {
         )
     }
 
-    app.proceedScheduleStock = function (ctx, inStockList, resultList) {
+    app.proceedScheduleStock = async function (ctx, inStockList, resultList) {
         // Clone the Stock List during initialize
         if (inStockList == null) inStockList = stockList.slice(0);
         if (resultList == null) resultList = [];
@@ -138,7 +140,10 @@ function createApplication(bot, opts) {
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);
         } else {
-            opts.myBot.sendMarkdown(stockSubscriberList, buffer);
+            // Get the Latest subscriber list
+            let subscriberList = await app.getSubscriberList(STOCK_SCHEDULER_ID);
+            console.log(`Subscriber : ${subscriberList}`);
+            opts.myBot.sendMarkdown(subscriberList, buffer);
         }
     }
 
@@ -172,7 +177,7 @@ function createApplication(bot, opts) {
         )
     }
 
-    app.proceedScheduleFxRate = function (ctx, inFxList, resultList) {
+    app.proceedScheduleFxRate = async function (ctx, inFxList, resultList) {
         // Clone the FX List during initialize
         if (inFxList == null) inFxList = fxList.slice(0);
         if (resultList == null) resultList = [];
@@ -205,7 +210,10 @@ function createApplication(bot, opts) {
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);
         } else {
-            opts.myBot.sendMarkdown(fxSubscriberList, buffer);
+            // Get the Latest subscriber list
+            let subscriberList = await app.getSubscriberList(FX_SCHEDULER_ID);
+            console.log(`Subscriber : ${subscriberList}`);
+            opts.myBot.sendMarkdown(subscriberList, buffer);
         }
     }
 
@@ -213,6 +221,16 @@ function createApplication(bot, opts) {
         ctx.reply(`\`\`\`\n${message}\`\`\``, {
             parse_mode: "Markdown"
         });
+    }
+
+    app.getSubscriberList = async function (type) {
+        let cacheResult = await cacheHelper.getCache(type, "DEFAULT");
+        let subscriber = JSON.parse(cacheResult).data;
+        if (subscriber == null) {
+            console.log("No one subscribe");
+            return [];
+        }
+        return subscriber.toString().split(',');
     }
 
     // Initialize the App

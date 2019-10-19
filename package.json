@@ -21,7 +21,8 @@
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "request": "^2.88.0",
-    "telegraf": "^3.27.1"
+    "telegraf": "^3.27.1",
+    "telegraf-command-parts": "^1.0.3"
   },
   "devDependencies": {},
   "repository": {

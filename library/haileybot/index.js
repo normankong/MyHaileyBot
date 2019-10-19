@@ -2,6 +2,13 @@
 require('dotenv').config();
 
 const Telegraf = require('telegraf');
+const commandParts = require('telegraf-command-parts');
+const Stage = require('telegraf/stage')
+const Scene = require('telegraf/scenes/base')
+const Extra = require('telegraf/extra');
+const Markup = require('telegraf/markup');
+const session = require('telegraf/session');
+
 var financialHelper = require('./financial_helper.js');
 var weatherHelper = require('./weather_helper.js');
 var paymentHelper = require('./payment_helper.js');
@@ -10,9 +17,7 @@ var translateHelper = require('./translate_helper.js');
 var voiceHelper = require('./voice_helper.js');
 var busHelper = require('./bus_helper.js');
 var tripHelper = require('./trip_helper.js');
-const Extra = require('telegraf/extra');
-const Markup = require('telegraf/markup');
-const session = require('telegraf/session');
+var cacheHelper = require("./cache_helper.js");
 
 const util = require('util');
 const DEFAULT_ACTION = process.env.DEFAULT_ACTION;
@@ -50,6 +55,14 @@ function createApplication(opts) {
     bot = new Telegraf(token, config);
     // Add Event Handler
     bot.use(session());
+    bot.use(commandParts());
+
+
+    let stageList = app.getSceneList();
+    const stage = new Stage(stageList, {
+      ttl: 0
+    })
+    bot.use(stage.middleware())
 
     // Set the Telegram server to initialize the webhook
     if (webhookRefresh) {
@@ -87,6 +100,7 @@ function createApplication(opts) {
     voiceHelper = voiceHelper(bot, opts).setTranslateHelper(translateHelper);
     tripHelper = tripHelper(bot, opts);
     weatherHelper = weatherHelper(bot, opts);
+    cacheHelper = cacheHelper();
 
     // Set Event
     app.initEvent(bot);
@@ -95,6 +109,8 @@ function createApplication(opts) {
       return ctx.reply('Hey ! Nice to meet you');
     })
 
+
+    bot.launch();
   };
 
   // Send Message List with markdown
@@ -147,7 +163,6 @@ function createApplication(opts) {
   }
 
   app.initEvent = function (bot) {
-
     // Event Handler
     bot.on('sticker', (ctx) => app.processSticker(ctx));
     bot.on('message', (ctx) => app.processMessage(ctx));
@@ -157,6 +172,7 @@ function createApplication(opts) {
     bot.action('TRIP', (ctx) => app.setAction(ctx));
     bot.action('PREDICT', (ctx) => app.setAction(ctx));
     bot.action('TRANSLATE', (ctx) => app.setAction(ctx));
+    bot.action('SUBSCRIBE', (ctx) => app.subscribe(ctx));
   }
 
 
@@ -165,17 +181,18 @@ function createApplication(opts) {
     ctx.reply('❤️');
   }
 
-
-  app.processMessage = function (ctx) {
+  app.processMessage = async function (ctx) {
     console.debug(`Incoming request`);
-    //  console.log(util.inspect(ctx))
     console.log(JSON.stringify(ctx.message));
+    
+    //  console.log(util.inspect(ctx))
     // console.log(ctx.message.location);
 
     // Set Default Action;
     if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
 
     let isHandled = false;
+    isHandled = isHandled || app.handleRequest(ctx);
     isHandled = isHandled || app.showHint(ctx);
 
     isHandled = isHandled || financialHelper.handleRequest(ctx);
@@ -192,7 +209,6 @@ function createApplication(opts) {
 
 
   app.showHint = function (ctx) {
-
     if (ctx.message.text == "?") {
       var message = "Please Select Action"
       const keyboard = Markup.inlineKeyboard([
@@ -227,6 +243,24 @@ function createApplication(opts) {
     return false;
   }
 
+
+
+  app.handleRequest = function (ctx) {
+    if (ctx.message.entities != null && ctx.message.entities[0].type == "bot_command") {
+      switch (ctx.state.command.command) {
+        case "subscribe":
+          ctx.scene.enter('subscribe');
+          break;
+        default:
+          break;
+      }
+
+      return true;
+    }
+
+    return false;;
+  }
+
   app.handleScheduler = function (query) {
     console.log(`HaileyBot handle scheduler task`);
     let isHandled = false;
@@ -238,6 +272,55 @@ function createApplication(opts) {
     isHandled = isHandled || voiceHelper.handleScheduler(query);
     isHandled = isHandled || tripHelper.handleScheduler(query);
     isHandled = isHandled || weatherHelper.handleScheduler(query);
+  }
+
+  app.getSceneList = function () {
+    let sceneList = [];
+
+    // Subscriber Scene
+    const subscribeScene = new Scene('subscribe')
+    subscribeScene.enter((ctx) => {
+      let keyboardList = ["FX", "STOCK", "WEATHER"]
+      ctx.reply("Please select subscription", Markup
+        .keyboard(keyboardList)
+        .oneTime()
+        .resize()
+        .extra()
+      );
+      
+    });
+    // subscribeScene.leave((ctx) => {
+    //   ctx.reply('Subscribiption added')
+    // });
+    subscribeScene.on('message', async (ctx) => {
+      let userid = ctx.message.from.id;
+      let subscribeType = ctx.message.text;
+
+      switch (subscribeType) {
+        case "WEATHER":
+        case "FX":
+        case "STOCK":
+          
+          let result = await cacheHelper.appendCache(subscribeType, "DEFAULT", userid);
+          if (result)
+          {
+            ctx.replyWithMarkdown(`😘Subscribe ${userid} ${subscribeType} done `); 
+          }
+
+          break;
+        default:
+          ctx.replyWithMarkdown(`Unknown ${subscribeType} Exiting...`);
+          break;
+      }
+
+      setTimeout(() => {
+        ctx.scene.leave()
+      }, 100);
+    });
+
+    sceneList.push(subscribeScene);
+
+    return sceneList;
   }
 
   // Initialize the App
