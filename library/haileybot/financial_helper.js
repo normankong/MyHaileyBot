@@ -12,8 +12,6 @@ function createApplication(bot, opts) {
     var app = {};
     var stockList = [];
     var fxList = [];
-    var stockSubscriberList = process.env.STOCK_SCHEDULER_SUBSCRIBER.split(",");
-    var fxSubscriberList = process.env.FX_SCHEDULER_SUBSCRIBER.split(",");
 
     app.getOpts = function () {
         return opts;
