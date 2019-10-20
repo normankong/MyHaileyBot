@@ -117,13 +117,13 @@ function createApplication(bot, opts) {
         scene.enter((ctx) => ctx.reply("Which stock you wanna subscribe [Full Format please, e.g. 0005]"));
         scene.on('message', async (ctx) => {
             let stock = ctx.message.text;
-            let response = await opts.cacheHelper.getCache("STOCK", "SUSCRIBPTION");
+            let response = await opts.cacheHelper.getCache("STOCK", "SUBSCRIPTION");
             let stockList = (response.data) ? response.data.toString().split(",") : [];
             if (stockList.indexOf(stock) != -1) {
                 ctx.replyWithMarkdown(`😘親 : You have already subscribe ${stock}`);
             } else {
                 stockList.push(stock);
-                let result = await opts.cacheHelper.createCache("STOCK", "SUSCRIBPTION", stockList);
+                let result = await opts.cacheHelper.createCache("STOCK", "SUBSCRIPTION", stockList);
                 ctx.replyWithMarkdown(`😘親 : Subscribed ${stock}, total : ${stockList}`);
             }
             app.exitScene(ctx);
