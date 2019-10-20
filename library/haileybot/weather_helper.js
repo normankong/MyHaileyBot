@@ -73,7 +73,6 @@ function createApplication(bot, opts) {
 
     app.init = function () {
         cacheHelper = cacheHelper();
-        return false;
     }
 
     app.handleScheduler = function (query) {
@@ -222,7 +221,7 @@ function createApplication(bot, opts) {
 
     app.getSubscriberList = async function (type) {
         let cacheResult = await cacheHelper.getCache(type, "DEFAULT");
-        let subscriber = JSON.parse(cacheResult).data;
+        let subscriber = cacheResult.data;
         if (subscriber == null) {
             console.log("No one subscribe");
             return [];

@@ -5,7 +5,6 @@ const request = require('request');
 const util = require('util')
 const requestPromise = util.promisify(request);
 
-
 function createApplication(bot, opts) {
     var bot = bot
     var opts = opts;
@@ -17,7 +16,10 @@ function createApplication(bot, opts) {
 
     app.init = function () {}
 
-    app.getCache = async function (type, key) {
+    app.getCache = async function (type, key, formatter) {
+        // User Default formatter if not pass
+        formatter = formatter != null ? formatter : app.jsonFormatter;
+
         let param = process.env.CACHE_API_PARAM.replace("{{IDENTIFY}}", process.env.CACHE_JWT_USER).replace("{{TYPE}}", type).replace("{{KEY}}", key)
         let url = process.env.CACHE_API_URL + param;
         let options = {
@@ -27,10 +29,10 @@ function createApplication(bot, opts) {
         }
         console.log(`Processing Cache ${url}`)
         const response = await requestPromise(url, options);
-        return app.cacheFormatter(response.body);
+        return formatter(response.body);
     }
 
-    app.appendCache = async function (type, key, value) {
+    app.procedCacheUpdate = async function (action, type, key, value) {
         let url = process.env.CACHE_API_URL;
         let headers = {
                 "Content-Type" : "application/json",
@@ -38,11 +40,11 @@ function createApplication(bot, opts) {
         }
         let body = {
             "identify": process.env.CACHE_JWT_USER,
-            "action" : "APPEND",
+            "action" : action,
             "type" : type,
-            "key" : key,
-            "data" : value
+            "key" : key
         };
+        if (action != "DELETE") body.data = value;
 
         let request = {
             method: "POST",
@@ -51,7 +53,7 @@ function createApplication(bot, opts) {
             json: body
         }
 
-        console.log(`Processing Append Cache ${url} ${key} ${type} ${value}`)
+        console.log(`Processing Cache ${url} ${action} ${key} ${type} ${value}`)
         try
         {
             const response = await requestPromise(request);
@@ -62,17 +64,35 @@ function createApplication(bot, opts) {
         }
     }
 
-    app.cacheFormatter = function (jsonString) {
+    app.jsonFormatter = function (jsonString) {
+        console.log(`Cache result : ${jsonString}`);
+        return JSON.parse(jsonString);
+    }
+
+    app.plainFormatter = function (jsonString) {
         console.log(`Cache result : ${jsonString}`);
         return jsonString;
+    }
+
+    app.createCache = async function (type, key, value) {
+        return await app.procedCacheUpdate ("CREATE", type, key, value);
+    }
+
+    app.appendCache = async function (type, key, value) {
+        return await app.procedCacheUpdate ("APPEND", type, key, value);
+    }
+
+    app.deleteCache = async function (type, key) {
+        return await app.procedCacheUpdate ("DELETE", type, key);
+    }
+
+    app.removeCache = async function (type, key, value) {
+        return await app.procedCacheUpdate ("REMOVE", type, key, value);
     }
 
     // Initialize the App
     app.init();
     return app;
 }
-
-
-
 
 exports = module.exports = createApplication;

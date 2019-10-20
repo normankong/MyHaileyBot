@@ -4,7 +4,7 @@ require('dotenv').config();
 const Telegraf = require('telegraf');
 const commandParts = require('telegraf-command-parts');
 const Stage = require('telegraf/stage')
-const Scene = require('telegraf/scenes/base')
+// const Scene = require('telegraf/scenes/base')
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 const session = require('telegraf/session');
@@ -18,6 +18,9 @@ var voiceHelper = require('./voice_helper.js');
 var busHelper = require('./bus_helper.js');
 var tripHelper = require('./trip_helper.js');
 var cacheHelper = require("./cache_helper.js");
+var sceneHelper = require("./scene_helper.js");
+var userProfileHelper = require("./user_profile_helper.js");
+
 
 const util = require('util');
 const DEFAULT_ACTION = process.env.DEFAULT_ACTION;
@@ -42,9 +45,6 @@ function createApplication(opts) {
     var middleware = opts.middleware;
     var adminUser = opts.adminUser;
 
-    // Assign itself to myBot instance
-    opts.myBot = app;
-
     const config = {
       telegram: {
         webhookReply: false
@@ -57,8 +57,9 @@ function createApplication(opts) {
     bot.use(session());
     bot.use(commandParts());
 
-
-    let stageList = app.getSceneList();
+    // Initial Stage / Scene
+    sceneHelper = sceneHelper(bot, opts);
+    let stageList = sceneHelper.getSceneList();
     const stage = new Stage(stageList, {
       ttl: 0
     })
@@ -100,10 +101,17 @@ function createApplication(opts) {
     voiceHelper = voiceHelper(bot, opts).setTranslateHelper(translateHelper);
     tripHelper = tripHelper(bot, opts);
     weatherHelper = weatherHelper(bot, opts);
-    cacheHelper = cacheHelper();
+    cacheHelper = cacheHelper(bot, opts);
+    userProfileHelper = userProfileHelper(bot, opts);
+
+    // Assign itself to myBot instance
+    opts.myBot = app;
+    opts.cacheHelper = cacheHelper;
+    opts.userProfileHelper = userProfileHelper;
 
     // Set Event
     app.initEvent(bot);
+
 
     bot.command('start', ctx => {
       return ctx.reply('Hey ! Nice to meet you');
@@ -184,9 +192,13 @@ function createApplication(opts) {
   app.processMessage = async function (ctx) {
     console.debug(`Incoming request`);
     console.log(JSON.stringify(ctx.message));
-    
-    //  console.log(util.inspect(ctx))
+
+    // console.log(util.inspect(ctx))
     // console.log(ctx.message.location);
+
+    // Init Profile (Create if not found, then cache in session)
+    opts.userProfileHelper.initProfile(ctx);
+
 
     // Set Default Action;
     if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
@@ -251,6 +263,8 @@ function createApplication(opts) {
         case "subscribe":
           ctx.scene.enter('subscribe');
           break;
+        case "unsubscribe":
+          ctx.scene.enter('unsubscribe');
         default:
           break;
       }
@@ -272,55 +286,6 @@ function createApplication(opts) {
     isHandled = isHandled || voiceHelper.handleScheduler(query);
     isHandled = isHandled || tripHelper.handleScheduler(query);
     isHandled = isHandled || weatherHelper.handleScheduler(query);
-  }
-
-  app.getSceneList = function () {
-    let sceneList = [];
-
-    // Subscriber Scene
-    const subscribeScene = new Scene('subscribe')
-    subscribeScene.enter((ctx) => {
-      let keyboardList = ["FX", "STOCK", "WEATHER"]
-      ctx.reply("Please select subscription", Markup
-        .keyboard(keyboardList)
-        .oneTime()
-        .resize()
-        .extra()
-      );
-      
-    });
-    // subscribeScene.leave((ctx) => {
-    //   ctx.reply('Subscribiption added')
-    // });
-    subscribeScene.on('message', async (ctx) => {
-      let userid = ctx.message.from.id;
-      let subscribeType = ctx.message.text;
-
-      switch (subscribeType) {
-        case "WEATHER":
-        case "FX":
-        case "STOCK":
-          
-          let result = await cacheHelper.appendCache(subscribeType, "DEFAULT", userid);
-          if (result)
-          {
-            ctx.replyWithMarkdown(`😘Subscribe ${userid} ${subscribeType} done `); 
-          }
-
-          break;
-        default:
-          ctx.replyWithMarkdown(`Unknown ${subscribeType} Exiting...`);
-          break;
-      }
-
-      setTimeout(() => {
-        ctx.scene.leave()
-      }, 100);
-    });
-
-    sceneList.push(subscribeScene);
-
-    return sceneList;
   }
 
   // Initialize the App

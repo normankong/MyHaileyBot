@@ -1,0 +1,2 @@
+subscribe - Subscribe Daily Update
+unsubscribe - Unsubscribe Daily Update
