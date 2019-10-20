@@ -17,11 +17,11 @@ function createApplication(bot, opts) {
 
     app.init = function () {
         setInterval(async () => {
-            fxList = await opts.cacheHelper.getCache("FX", "SUSCRIBPTION", app.fxCacheFormatter);
+            fxList = await opts.cacheHelper.getCache("FX", "SUBSCRIPTION", app.fxCacheFormatter);
         }, 60000);
         // Trigger on init
         setTimeout(async () => {
-            fxList = await opts.cacheHelper.getCache("FX", "SUSCRIBPTION", app.fxCacheFormatter);
+            fxList = await opts.cacheHelper.getCache("FX", "SUBSCRIPTION", app.fxCacheFormatter);
         }, 1000);
     }
 
@@ -106,7 +106,7 @@ function createApplication(bot, opts) {
     app.proceedScheduleStock = async function (ctx, inStockList, resultList) {
         // Retrieve the Stock List from Cache
         if (inStockList == null) {
-            inStockList = await opts.cacheHelper.getCache("STOCK", "SUSCRIBPTION", opts.cacheHelper.emptyListFormatter);
+            inStockList = await opts.cacheHelper.getCache("STOCK", "SUBSCRIPTION", opts.cacheHelper.emptyListFormatter);
             console.log(`Stock List : ${inStockList}`);
         }
         if (resultList == null) resultList = [];
@@ -179,7 +179,7 @@ function createApplication(bot, opts) {
     app.proceedScheduleFxRate = async function (ctx, inFxList, resultList) {
         // Retrieve the FX List from Cache
         if (inFxList == null) {
-            inFxList = await opts.cacheHelper.getCache("FX", "SUSCRIBPTION", app.fxCacheFormatter);
+            inFxList = await opts.cacheHelper.getCache("FX", "SUBSCRIPTION", app.fxCacheFormatter);
         }
         if (resultList == null) resultList = [];
 

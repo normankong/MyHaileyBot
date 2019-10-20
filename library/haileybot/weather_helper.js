@@ -86,7 +86,7 @@ function createApplication(bot, opts) {
     }
 
     app.handleRequest = function (ctx) {
-console.log("aaa")
+
         let subject = ctx.message.text;
         if (subject == null) return false;
 
