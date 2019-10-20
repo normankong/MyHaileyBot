@@ -204,9 +204,9 @@ function createApplication(opts) {
     if (ctx.session.action == null) ctx.session.action = DEFAULT_ACTION;
 
     let isHandled = false;
-    isHandled = isHandled || app.handleRequest(ctx);
     isHandled = isHandled || app.showHint(ctx);
 
+    isHandled = isHandled || sceneHelper.handleRequest(query);
     isHandled = isHandled || financialHelper.handleRequest(ctx);
     isHandled = isHandled || paymentHelper.handleRequest(ctx);
     isHandled = isHandled || visionHelper.handleRequest(ctx);
@@ -253,26 +253,6 @@ function createApplication(opts) {
     }
 
     return false;
-  }
-
-
-
-  app.handleRequest = function (ctx) {
-    if (ctx.message.entities != null && ctx.message.entities[0].type == "bot_command") {
-      switch (ctx.state.command.command) {
-        case "subscribe":
-          ctx.scene.enter('subscribe');
-          break;
-        case "unsubscribe":
-          ctx.scene.enter('unsubscribe');
-        default:
-          break;
-      }
-
-      return true;
-    }
-
-    return false;;
   }
 
   app.handleScheduler = function (query) {

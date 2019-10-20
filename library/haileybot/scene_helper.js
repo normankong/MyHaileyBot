@@ -26,7 +26,6 @@ function createApplication(bot, opts) {
         sceneList.push(app.getUnSubscribeScene());
 
         return sceneList;
-
     }
 
     // Subscriber Scene
@@ -127,6 +126,18 @@ function createApplication(bot, opts) {
         });
 
         return scene;
+    }
+
+    app.handleRequest = function (ctx) {
+        if (ctx.message.entities != null && ctx.message.entities[0].type == "bot_command") {
+            switch (ctx.state.command.command) {
+                case "subscribe":
+                case "unsubscribe":
+                    ctx.scene.enter(ctx.state.command.command);
+                    return true;
+            }
+        }
+        return false;;
     }
 
     // Initialize the App

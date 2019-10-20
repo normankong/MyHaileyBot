@@ -27,7 +27,4 @@ function createApplication(bot, opts) {
     return app;
 }
 
-
-
-
 exports = module.exports = createApplication;
