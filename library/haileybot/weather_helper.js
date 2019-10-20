@@ -86,7 +86,7 @@ function createApplication(bot, opts) {
     }
 
     app.handleRequest = function (ctx) {
-
+console.log("aaa")
         let subject = ctx.message.text;
         if (subject == null) return false;
 
@@ -220,13 +220,8 @@ function createApplication(bot, opts) {
     }
 
     app.getSubscriberList = async function (type) {
-        let cacheResult = await cacheHelper.getCache(type, "DEFAULT");
-        let subscriber = cacheResult.data;
-        if (subscriber == null) {
-            console.log("No one subscribe");
-            return [];
-        }
-        return subscriber.toString().split(',');
+        let list = await opts.cacheHelper.getCache(type, "DEFAULT", opts.cacheHelper.emptyListFormatter);
+        return list;
     }
 
     // Initialize the App

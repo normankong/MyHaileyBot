@@ -2,7 +2,6 @@
 
 const request = require('request');
 const leftPad = require("left-pad");
-var cacheHelper = require("./cache_helper.js");
 const STOCK_SCHEDULER_ID = process.env.STOCK_SCHEDULER_ID;
 const FX_SCHEDULER_ID = process.env.FX_SCHEDULER_ID;
 
@@ -10,7 +9,6 @@ function createApplication(bot, opts) {
     var bot = bot;
     var opts = opts;
     var app = {};
-    var stockList = [];
     var fxList = [];
 
     app.getOpts = function () {
@@ -18,10 +16,13 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        let config = require(process.env.STOCK_CONFIG);
-        stockList = config.stockList;
-        fxList = config.fxList;
-        cacheHelper = cacheHelper();
+        setInterval(async () => {
+            fxList = await opts.cacheHelper.getCache("FX", "SUSCRIBPTION", app.fxCacheFormatter);
+        }, 60000);
+        // Trigger on init
+        setTimeout(async () => {
+            fxList = await opts.cacheHelper.getCache("FX", "SUSCRIBPTION", app.fxCacheFormatter);
+        }, 1000);
     }
 
     app.handleScheduler = function (query) {
@@ -56,7 +57,6 @@ function createApplication(bot, opts) {
         }
 
         // Handle FX Rate
-        let isHandle = false;
         for (let i = 0; i < fxList.length; i++) {
             let fx = fxList[i];
             if (subject == fx.from) {
@@ -104,8 +104,11 @@ function createApplication(bot, opts) {
     }
 
     app.proceedScheduleStock = async function (ctx, inStockList, resultList) {
-        // Clone the Stock List during initialize
-        if (inStockList == null) inStockList = stockList.slice(0);
+        // Retrieve the Stock List from Cache
+        if (inStockList == null) {
+            inStockList = await opts.cacheHelper.getCache("STOCK", "SUSCRIBPTION", opts.cacheHelper.emptyListFormatter);
+            console.log(`Stock List : ${inStockList}`);
+        }
         if (resultList == null) resultList = [];
 
         // Check finish stock quote
@@ -113,8 +116,8 @@ function createApplication(bot, opts) {
             let stock = inStockList.shift();
 
             // Trigger Proceed Stock Quote with callback
-            app.proceedStockQuote(null, stock.code, (result) => {
-                result.desc = stock.desc
+            app.proceedStockQuote(null, stock, (result) => {
+                // result.desc = stock.desc
                 resultList.push(result);
                 app.proceedScheduleStock(ctx, inStockList, resultList);
             });
@@ -129,8 +132,7 @@ function createApplication(bot, opts) {
 
         for (let i = 0; i < resultList.length; i++) {
             let stock = resultList[i];
-
-            buffer += `| ${leftPad(stock.code, 5, "0")}  |  ${leftPad(stock.price.toString(), 5, " ")} | ${stock.desc}\n`;
+            buffer += `| ${leftPad(stock.code, 5, "0")}  |  ${leftPad(stock.price.toString(), 5, " ")} | ${stock.symbol}\n`;
         }
         buffer += "|--------|--------|--------------\n";
 
@@ -175,8 +177,10 @@ function createApplication(bot, opts) {
     }
 
     app.proceedScheduleFxRate = async function (ctx, inFxList, resultList) {
-        // Clone the FX List during initialize
-        if (inFxList == null) inFxList = fxList.slice(0);
+        // Retrieve the FX List from Cache
+        if (inFxList == null) {
+            inFxList = await opts.cacheHelper.getCache("FX", "SUSCRIBPTION", app.fxCacheFormatter);
+        }
         if (resultList == null) resultList = [];
 
         // Check finish fx rate quote
@@ -221,13 +225,15 @@ function createApplication(bot, opts) {
     }
 
     app.getSubscriberList = async function (type) {
-        let cacheResult = await cacheHelper.getCache(type, "DEFAULT");
-        let subscriber = cacheResult.data;
-        if (subscriber == null) {
-            console.log("No one subscribe");
-            return [];
-        }
-        return subscriber.toString().split(',');
+        let list = await opts.cacheHelper.getCache(type, "DEFAULT", opts.cacheHelper.emptyListFormatter);
+        return list;
+    }
+
+    // Special Cache Formatter (Manual data maintenance)
+    app.fxCacheFormatter = async function (response) {
+        let data = JSON.parse(response)
+        if (data.code == "000") return data.data;
+        return [];
     }
 
     // Initialize the App

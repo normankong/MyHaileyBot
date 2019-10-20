@@ -64,11 +64,6 @@ function createApplication(bot, opts) {
         }
     }
 
-    app.jsonFormatter = function (jsonString) {
-        console.log(`Cache result : ${jsonString}`);
-        return JSON.parse(jsonString);
-    }
-
     app.plainFormatter = function (jsonString) {
         console.log(`Cache result : ${jsonString}`);
         return jsonString;
@@ -88,6 +83,25 @@ function createApplication(bot, opts) {
 
     app.removeCache = async function (type, key, value) {
         return await app.procedCacheUpdate ("REMOVE", type, key, value);
+    }
+
+    app.emptyListFormatter = function(response){
+        let json = JSON.parse(response);
+        return (json.code == "000") ? json.data.toString().split(',') : [];
+    }
+
+    app.nullFormatter = function(response){
+        let json = JSON.parse(response);
+        return (json.code == "000") ? json.data : null;
+    }
+
+    app.blankFormatter = function(response){
+        let json = JSON.parse(response);
+        return (json.code == "000") ? json.data : "";
+    }
+
+    app.jsonFormatter = function (jsonString) {
+        return JSON.parse(jsonString);
     }
 
     // Initialize the App

@@ -1,16 +1,13 @@
 'use strict';
 
-const request = require('request');
-const util = require('util');
-const Stage = require('telegraf/stage')
 const Scene = require('telegraf/scenes/base')
-const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 
 function createApplication(bot, opts) {
     var bot = bot
     var opts = opts;
     var app = {};
+    var sceneList = [];
     var SUSBSCRIBE_TYPE_LIST = process.env.SUSBSCRIBE_TYPE_LIST.split(',');
 
     app.getOpts = function () {
@@ -20,11 +17,9 @@ function createApplication(bot, opts) {
     app.init = function () {}
 
     app.getSceneList = function () {
-
-        let sceneList = [];
         sceneList.push(app.getSubscribeScene());
         sceneList.push(app.getUnSubscribeScene());
-
+        sceneList.push(app.getStockSubscribeScene());
         return sceneList;
     }
 
@@ -39,9 +34,6 @@ function createApplication(bot, opts) {
                 .extra()
             );
         });
-        // scene.leave((ctx) => {
-        //   ctx.reply('Subscribiption added')
-        // });
         scene.on('message', async (ctx) => {
             let userid = ctx.message.from.id;
             let type = ctx.message.text;
@@ -66,10 +58,7 @@ function createApplication(bot, opts) {
                 ctx.replyWithMarkdown(`Unknown ${type} Exiting...`);
             }
 
-            setTimeout(() => {
-                ctx.scene.leave()
-            }, 100);
-
+            app.exitScene(ctx);
         });
 
         return scene;
@@ -93,14 +82,10 @@ function createApplication(bot, opts) {
                 .extra()
             );
         });
-        // scene.leave((ctx) => {
-        //   ctx.reply('Subscribiption added')
-        // });
         scene.on('message', async (ctx) => {
             let userid = ctx.message.from.id;
             let type = ctx.message.text;
             let profile = await opts.userProfileHelper.getProfile(ctx);
-
             if (profile.subscribedList == null) {
                 ctx.reply('There is nothing need to unsubscribe');
                 ctx.scene.leave();
@@ -120,21 +105,45 @@ function createApplication(bot, opts) {
             } else {
                 ctx.replyWithMarkdown(`Unknown ${type} Exiting...`);
             }
-            setTimeout(() => {
-                ctx.scene.leave()
-            }, 100);
+            app.exitScene(ctx);
         });
 
         return scene;
     }
 
+    // Get Stock Scene
+    app.getStockSubscribeScene = function () {
+        const scene = new Scene('stocklist');
+        scene.enter((ctx) => ctx.reply("Which stock you wanna subscribe [Full Format please, e.g. 0005]"));
+        scene.on('message', async (ctx) => {
+            let stock = ctx.message.text;
+            let response = await opts.cacheHelper.getCache("STOCK", "SUSCRIBPTION");
+            let stockList = (response.data) ? response.data.toString().split(",") : [];
+            if (stockList.indexOf(stock) != -1) {
+                ctx.replyWithMarkdown(`😘親 : You have already subscribe ${stock}`);
+            } else {
+                stockList.push(stock);
+                let result = await opts.cacheHelper.createCache("STOCK", "SUSCRIBPTION", stockList);
+                ctx.replyWithMarkdown(`😘親 : Subscribed ${stock}, total : ${stockList}`);
+            }
+            app.exitScene(ctx);
+        });
+
+        return scene;
+    }
+
+    app.exitScene = function (ctx) {
+        setTimeout(() => {
+            ctx.scene.leave()
+        }, 100);
+    }
+
     app.handleRequest = function (ctx) {
+        let tmpList = sceneList.map(x => x.id);
         if (ctx.message.entities != null && ctx.message.entities[0].type == "bot_command") {
-            switch (ctx.state.command.command) {
-                case "subscribe":
-                case "unsubscribe":
-                    ctx.scene.enter(ctx.state.command.command);
-                    return true;
+            if (tmpList.indexOf(ctx.state.command.command) != -1) {
+                ctx.scene.enter(ctx.state.command.command);
+                return true;
             }
         }
         return false;;

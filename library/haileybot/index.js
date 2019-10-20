@@ -4,7 +4,6 @@ require('dotenv').config();
 const Telegraf = require('telegraf');
 const commandParts = require('telegraf-command-parts');
 const Stage = require('telegraf/stage')
-// const Scene = require('telegraf/scenes/base')
 const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 const session = require('telegraf/session');
@@ -112,11 +111,9 @@ function createApplication(opts) {
     // Set Event
     app.initEvent(bot);
 
-
     bot.command('start', ctx => {
       return ctx.reply('Hey ! Nice to meet you');
     })
-
 
     bot.launch();
   };
@@ -206,7 +203,7 @@ function createApplication(opts) {
     let isHandled = false;
     isHandled = isHandled || app.showHint(ctx);
 
-    isHandled = isHandled || sceneHelper.handleRequest(query);
+    isHandled = isHandled || sceneHelper.handleRequest(ctx);
     isHandled = isHandled || financialHelper.handleRequest(ctx);
     isHandled = isHandled || paymentHelper.handleRequest(ctx);
     isHandled = isHandled || visionHelper.handleRequest(ctx);
@@ -257,6 +254,7 @@ function createApplication(opts) {
 
   app.handleScheduler = function (query) {
     console.log(`HaileyBot handle scheduler task`);
+    
     let isHandled = false;
     isHandled = isHandled || financialHelper.handleScheduler(query);
     isHandled = isHandled || paymentHelper.handleScheduler(query);

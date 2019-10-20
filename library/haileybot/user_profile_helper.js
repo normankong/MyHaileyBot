@@ -9,22 +9,21 @@ function createApplication(bot, opts) {
         return opts;
     }
 
-    app.init = function () {
-    }
+    app.init = function () {}
 
     app.getProfile = async function (ctx) {
-        
+
         if (ctx.session.profile != null) {
             console.log(`Profile in session : ${JSON.stringify(ctx.session.profile)}`);
             return ctx.session.profile;
         }
 
         let userid = ctx.message.from.id;
-        let result = await opts.cacheHelper.getCache("USER", userid);
-        if (result.code != "000") {
+        let profile = await opts.cacheHelper.getCache("USER", userid, opts.cacheHelper.nullFormatter);
+        if (profile == null) {
             return null;
         }
-        let profile = result.data;
+        // Assign to Session
         ctx.session.profile = profile;
         return profile;
     }
@@ -32,7 +31,7 @@ function createApplication(bot, opts) {
     app.setProfile = async function (ctx, profile) {
         ctx.session.profile = profile;
         let userid = ctx.message.from.id;
-        let result = await opts.cacheHelper.createCache("USER", userid, JSON.stringify(profile));
+        let result = await opts.cacheHelper.createCache("USER", userid, profile);
         return result;
     }
 
@@ -46,10 +45,9 @@ function createApplication(bot, opts) {
                 first_name: ctx.message.from.first_name,
                 username: ctx.message.from.username
             }
-
-            // Update to DB
+            // Update to Database
             let result = await app.setProfile(ctx, profile);
-            console.log(`Profile created ${JSON.stringify(profile)}`);
+            console.log(`Profile created : ${JSON.stringify(profile)}`);
             return result;
         }
     }
