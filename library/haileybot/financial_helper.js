@@ -16,13 +16,10 @@ function createApplication(bot, opts) {
     }
 
     app.init = function () {
-        setInterval(async () => {
-            fxList = await opts.cacheHelper.getCache("FX", "SUBSCRIPTION", app.fxCacheFormatter);
-        }, 60000);
-        // Trigger on init
+        // The Cache Helper only available upon delay
         setTimeout(async () => {
             fxList = await opts.cacheHelper.getCache("FX", "SUBSCRIPTION", app.fxCacheFormatter);
-        }, 1000);
+        }, 100);
     }
 
     app.handleScheduler = function (query) {
@@ -180,6 +177,7 @@ function createApplication(bot, opts) {
         // Retrieve the FX List from Cache
         if (inFxList == null) {
             inFxList = await opts.cacheHelper.getCache("FX", "SUBSCRIPTION", app.fxCacheFormatter);
+            fxList = inFxList.slice(0);
         }
         if (resultList == null) resultList = [];
 
