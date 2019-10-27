@@ -46,7 +46,7 @@ function createApplication(opts) {
 
     const config = {
       telegram: {
-        webhookReply: false
+        webhookReply: true
       }
     };
 
