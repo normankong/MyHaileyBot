@@ -115,7 +115,7 @@ function createApplication(opts) {
       return ctx.reply('Hey ! Nice to meet you');
     })
 
-    bot.launch();
+    // bot.launch();
   };
 
   // Send Message List with markdown
