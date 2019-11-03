@@ -43,12 +43,12 @@ function createApplication(bot, opts) {
         if (subject == null) return false;
 
         // Proceed Stock Quote
-        var stockRegEx = new RegExp("(\\d*).hk", "i");
+        var stockRegEx = new RegExp("(\\d*).hk$", "i");
         if (stockRegEx.test(subject)) {
-            var msg = stockRegEx.exec(subject);
-            var stockQuote = msg[1];
+            //var msg = stockRegEx.exec(subject);
+            var stockQuote = subject.padStart(7, '0');
 
-            ctx.reply(`😅Just a moment please, fetching ${stockQuote}.hk ...`)
+            ctx.reply(`😅Just a moment please, fetching ${stockQuote} ...`)
             setTimeout(app.proceedStockQuote, 100, ctx, stockQuote);
             return true;
         }
@@ -64,9 +64,11 @@ function createApplication(bot, opts) {
 
         switch (subject.toUpperCase()) {
             case "STOCK":
+                ctx.reply(`😅Just a moment please, fetching Stock ...`)
                 app.proceedScheduleStock(ctx);
                 return true;
             case "FX":
+                ctx.reply(`😅Just a moment please, fetching FX ...`)
                 app.proceedScheduleFxRate(ctx);
                 return true;
         }
@@ -79,25 +81,40 @@ function createApplication(bot, opts) {
      * @param {Telegram Context} ctx 
      * @param {Stock Tick} stockQuote 
      */
-    app.proceedStockQuote = function (ctx, stockQuote, callback) {
+    app.proceedStockQuote = async function (ctx, stockQuote, callback) {
         let url = process.env.STOCK_API_URL.replace("<%STOCK_QUOTE%>", leftPad(stockQuote, 5, "0"));
         console.log(`Processing url : ${url}`);
-        request.get(url,
-            function (error, response, body) {
 
-                let price = JSON.parse(body).dataset.data[0][1];
-                let symbol = JSON.parse(body).dataset.name;
-                if (callback) {
-                    callback({
-                        code: stockQuote,
-                        symbol: symbol,
-                        price: price
-                    });
-                } else {
-                    app.replyMarkdown(ctx, `${ symbol } : $${ price }`);
-                }
+        let formatter = function (body) {
+            let json = JSON.parse(body)["Global Quote"];
+            if (json == null) return { displayText : json['Note']};
+            let result = {
+                symbol: json["01. symbol"],
+                open: json["02. open"],
+                high: json["03. high"],
+                low: json["04. low"],
+                price: json["05. price"],
+                volumne: json["06. volume"],
+                date: json["07. latest trading day"],
+                close: json["08. previous close"],
+                change: json["09. change"],
+                changeRate: json["10. change percent"],
+            };
+            result.displayText = `${result.symbol} : ${result.price}/${result.close} ${result.change}(${result.changeRate})`;
+            return result;
+        }
+
+        let myCallback = function (result) {
+            if (callback) {
+                callback(result);
+            } else {
+                console.log(`[${result.displayText}]`)
+                app.replyMarkdown(ctx, result.displayText);
             }
-        )
+        }
+
+        // Trigger Get Request
+        app.getRequest(url, null, formatter, myCallback);
     }
 
     app.proceedScheduleStock = async function (ctx, inStockList, resultList) {
@@ -123,15 +140,15 @@ function createApplication(bot, opts) {
 
         // Format and display stock quote result
         let buffer = "";
-        buffer += "|--------|--------|--------------\n";
-        buffer += "| Quote  | Price  | Name         \n";
-        buffer += "|--------|--------|--------------\n";
+        buffer += "|-----------|-------------------\n";
+        buffer += "| Quote     | Price             \n";
+        buffer += "|-----------|-------------------\n";
 
         for (let i = 0; i < resultList.length; i++) {
             let stock = resultList[i];
-            buffer += `| ${leftPad(stock.code, 5, "0")}  |  ${leftPad(stock.price.toString(), 5, " ")} | ${stock.symbol}\n`;
+            buffer += `| ${stock.symbol}   |  ${leftPad(stock.price.toString(), 5, " ")}\n`;
         }
-        buffer += "|--------|--------|--------------\n";
+        buffer += "|-----------|-------------------\n";
 
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);
@@ -150,27 +167,38 @@ function createApplication(bot, opts) {
      */
     app.proceedFxRateQuote = function (ctx, fxQuote, callback) {
         let url = process.env.FX_API_URL;
-        url = url.replace("{{QUOTATION}}", fxQuote.q);
         url = url.replace("{{FROM}}", fxQuote.from);
         url = url.replace("{{TO}}", fxQuote.to);
 
-        let options = {
-            headers: {
-                "x-rapidapi-key": process.env.FX_API_KEY_VALUE,
-                "x-rapidapi-host": process.env.FX_API_HOST_VALUE
+        let formatter = function (body) {
+            let json = JSON.parse(body)["Realtime Currency Exchange Rate"];
+            if (json == null) return { displayText : json['Note']};
+            let result = {
+                fromCcyCode: json["1. From_Currency Code"],
+                fromCcyName: json["2. From_Currency Name"],
+                toCcyCode: json["3. To_Currency Code"],
+                toCcyName: json["4. To_Currency Name"],
+                rate: json["5. Exchange Rate"],
+                time: json["6. Last Refreshed"],
+                zone: json["7. Time Zone"],
+                bid: json["8. Bid Price"],
+                ask: json["9. Ask Price"]
+            };
+            result.displayText = `${result.fromCcyCode}${result.toCcyCode} (Bid : ${result.bid} Ask : ${result.ask}) ${result.time}`;
+            return result;
+        }
+
+        let myCallback = function (result) {
+            if (callback) {
+                callback(result);
+            } else {
+                console.log(`[${result.displayText}]`)
+                app.replyMarkdown(ctx, result.displayText);
             }
         }
-        console.log(`Processing url : ${url}`);
-        request.get(url, options,
-            function (error, response, body) {
-                if (callback) {
-                    fxQuote.rate = body;
-                    callback(fxQuote);
-                } else {
-                    app.replyMarkdown(ctx, `${fxQuote.from}-${fxQuote.to} : $${ body }`);
-                }
-            }
-        )
+
+        // Trigger Get Request
+        app.getRequest(url, null, formatter, myCallback);
     }
 
     app.proceedScheduleFxRate = async function (ctx, inFxList, resultList) {
@@ -195,16 +223,15 @@ function createApplication(bot, opts) {
 
         // Format and display result
         let buffer = "";
-        buffer += "|---------|----------|\n";
-        buffer += "| FX Pair | Rate     |\n";
-        buffer += "|---------|----------|\n";
+        buffer += "|----------|------------|\n";
+        buffer += "| FX Pair  | Rate       |\n";
+        buffer += "|----------|------------|\n";
 
         for (let i = 0; i < resultList.length; i++) {
             let fx = resultList[i];
-            buffer += `| ${fx.from}-${fx.to} | ${(fx.rate).toString().padStart(8)} |\n`;
+            buffer += `| ${fx.fromCcyCode}${fx.toCcyCode}   | ${(fx.rate).toString().padStart(8)} |\n`;
         }
-        buffer += "|---------|----------|";
-
+        buffer += "|----------|------------|";
 
         if (ctx != null) {
             app.replyMarkdown(ctx, buffer);
@@ -234,10 +261,24 @@ function createApplication(bot, opts) {
         return [];
     }
 
+    app.getRequest = function (url, options, formatter, callback) {
+        request.get(url, options,
+            function (error, response, body) {
+                var result = (error) ? { 'Note' : error} : formatter(body);
+                callback(result, error, response, body);
+            }
+        );
+    }
+
+    app.stockName = function (symbol) {
+        return `Name : ${symbol}`;
+    }
+
     // Initialize the App
     app.init();
     return app;
 }
+
 
 
 exports = module.exports = createApplication;
