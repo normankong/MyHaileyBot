@@ -66,4 +66,4 @@ obsolete
 *.sh
 key
 package-lock.json
-Cryto_help.txt
+*.txt
