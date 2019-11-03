@@ -5,7 +5,7 @@ cron:
   timezone: Asia/Hong_Kong
 - description: "Daily evening Weather 2"
   url: /scheduler?id=WEATHER
-  schedule: every mon,tue,wed,thu,fri 17:00
+  schedule: every mon,tue,wed,thu,fri,sat,sun 17:00
   timezone: Asia/Hong_Kong
 
 - description: "Daily morning FX 1"
@@ -23,9 +23,9 @@ cron:
   
 - description: "Daily morning Stock 1"
   url: /scheduler?id=STOCK
-  schedule: every mon,tue,wed,thu,fri 07:00
+  schedule: every mon,tue,wed,thu,fri 11:45
   timezone: Asia/Hong_Kong
 - description: "Daily morning Stock 2"
   url: /scheduler?id=STOCK
-  schedule: every mon,tue,wed,thu,fri 18:00
+  schedule: every mon,tue,wed,thu,fri 15:45
   timezone: Asia/Hong_Kong
